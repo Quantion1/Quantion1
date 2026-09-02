@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Bloom",
+    "slug": "bloom",
+    "scheme": "bloom",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF7FA"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bloom.tracker"
+    },
+    "android": {
+      "package": "com.bloom.tracker",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF7FA",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-router", "expo-font"],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
