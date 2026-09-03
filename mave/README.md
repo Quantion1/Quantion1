@@ -24,6 +24,26 @@ npm run build && npm start
 
 Search overlay, mega menu, wishlist, toasts and cart are persisted client-side (localStorage). No backend is wired yet: checkout is a UI flow.
 
+## Inspecting the HTML
+
+Two ways to look at the markup without running the dev server:
+
+```bash
+npm run export     # real Next.js static export -> ./out (41 routes, needs a web server)
+npm run snapshot   # fully rendered, self-contained pages -> ./snapshots
+```
+
+`out/` is the source-of-truth build output: the same HTML the server sends, with
+`_next/` CSS and JS chunks alongside it. Serve it with any static server
+(`npx serve out`).
+
+`snapshots/` is for reading and sharing. Each page is rendered in a real browser,
+scrolled so the reveal animations have settled, then written out with its
+stylesheet and fonts inlined and its scripts removed. The files open straight
+from disk with no network access, and links between the captured pages work.
+Start at `snapshots/index.html`. Because the scripts are stripped, the snapshots
+are static: hover styles work, the cart drawer and filters do not.
+
 ## Structure
 
 ```
@@ -39,6 +59,7 @@ src/
   data/           products, collections, life stages, bundles, journal
   store/          zustand cart / wishlist / toast stores
   lib/            formatting & class helpers
+  scripts/        snapshot.mjs - renders the export into standalone HTML
 docs/market-research.md   research behind the catalogue
 ```
 
