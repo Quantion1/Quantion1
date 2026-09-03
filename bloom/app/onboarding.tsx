@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,7 +9,7 @@ import { CARE_SYSTEMS, COUNTRY_ORDER } from '@/domain/care';
 import { cardFor } from '@/domain/cards';
 import { starterTiles } from '@/domain/trackers';
 import type { Stage } from '@/domain/types';
-import { addDays, toDayKey } from '@/lib/date';
+import { addDays, daysBetween, MONTHS, toDayKey } from '@/lib/date';
 import { useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
 
@@ -22,16 +22,26 @@ export default function Onboarding() {
   const claimLevel = useStore((s) => s.claimLevel);
   const seedDemo = useStore((s) => s.seedDemo);
 
+  const today = new Date();
+  const sixWeeksAgo = addDays(today, -42);
+
   const [step, setStep] = useState(0);
   const [stage, setStage] = useState<Stage>('pregnancy');
   const [week, setWeek] = useState(20);
-  const [weeksOld, setWeeksOld] = useState(6);
+  const [birthDay, setBirthDay] = useState(sixWeeksAgo.getDate());
+  const [birthMonth, setBirthMonth] = useState(sixWeeksAgo.getMonth());
+  const [birthYear, setBirthYear] = useState(sixWeeksAgo.getFullYear());
   const [parentName, setParentName] = useState('');
   const [babyName, setBabyName] = useState('');
   const [country, setCountry] = useState('NL');
 
   const dueDate = toDayKey(addDays(new Date(), (40 - week) * 7));
-  const birthDate = toDayKey(addDays(new Date(), -weeksOld * 7));
+
+  const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+  const clampedBirthDay = Math.min(birthDay, daysInMonth(birthYear, birthMonth));
+  const birthDateObj = new Date(birthYear, birthMonth, clampedBirthDay) > today ? today : new Date(birthYear, birthMonth, clampedBirthDay);
+  const birthDate = toDayKey(birthDateObj);
+  const weeksOld = Math.max(0, Math.floor(daysBetween(birthDateObj, today) / 7));
 
   const finish = (demo: boolean) => {
     if (demo) {
@@ -105,13 +115,23 @@ export default function Onboarding() {
               </>
             ) : (
               <>
-                <Title>How old is the baby?</Title>
+                <Title>When was the baby born?</Title>
                 <Card style={{ alignItems: 'center', gap: 6 }}>
                   <Dot stage={weeksOld < 12 ? 'sleep' : weeksOld < 26 ? 'tummy' : 'sit'} size={110} />
-                  <Title style={{ fontSize: 26 }}>{weeksOld} week{weeksOld === 1 ? '' : 's'}</Title>
-                  <Body>Born around {birthDate}</Body>
+                  <Title style={{ fontSize: 26 }}>{weeksOld} week{weeksOld === 1 ? '' : 's'} old</Title>
+                  <Body>Born {MONTHS[birthMonth]} {clampedBirthDay}, {birthYear}</Body>
                 </Card>
-                <Scale value={weeksOld} min={0} max={52} onChange={setWeeksOld} />
+                <DateWheels
+                  day={clampedBirthDay}
+                  month={birthMonth}
+                  year={birthYear}
+                  maxDay={daysInMonth(birthYear, birthMonth)}
+                  minYear={today.getFullYear() - 2}
+                  maxYear={today.getFullYear()}
+                  onChangeDay={setBirthDay}
+                  onChangeMonth={setBirthMonth}
+                  onChangeYear={setBirthYear}
+                />
               </>
             )}
           </View>
@@ -212,6 +232,62 @@ function Scale({ value, min, max, onChange }: { value: number; min: number; max:
         <Button title="−1" tone="quiet" size="sm" onPress={() => onChange(Math.max(min, value - 1))} />
         <Button title="+1" tone="quiet" size="sm" onPress={() => onChange(Math.min(max, value + 1))} />
       </View>
+    </View>
+  );
+}
+
+/** One scrollable row of pick-one options — the building block behind DateWheels. */
+function Wheel({ label, options, value, onChange }: { label: string; options: { value: number; label: string }[]; value: number; onChange: (v: number) => void }) {
+  const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    const idx = options.findIndex((o) => o.value === value);
+    if (idx < 0) return;
+    // Rough per-item width (they vary a little with label length) — good enough to
+    // bring the current selection on screen without the user hunting for it.
+    scrollRef.current?.scrollTo({ x: Math.max(0, idx * 48 - 60), animated: false });
+    // Only re-run when the selected value moves to a different index — not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return (
+    <View style={{ gap: 6 }}>
+      <Small>{label}</Small>
+      <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
+        {options.map((o) => (
+          <Text
+            key={o.value}
+            onPress={() => { tap(); onChange(o.value); }}
+            style={{
+              minWidth: 42, textAlign: 'center', paddingVertical: 11, paddingHorizontal: 10, borderRadius: radius.md, overflow: 'hidden',
+              backgroundColor: o.value === value ? palette.ink : palette.cardSunk,
+              color: o.value === value ? palette.paper : palette.inkSoft,
+              ...type.bodyMed,
+            }}
+          >
+            {o.label}
+          </Text>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+/** Day / month / year pickers for an exact birth date — three scrollable wheels, no native date picker needed. */
+function DateWheels({
+  day, month, year, maxDay, minYear, maxYear, onChangeDay, onChangeMonth, onChangeYear,
+}: {
+  day: number; month: number; year: number; maxDay: number; minYear: number; maxYear: number;
+  onChangeDay: (v: number) => void; onChangeMonth: (v: number) => void; onChangeYear: (v: number) => void;
+}) {
+  const days = Array.from({ length: maxDay }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
+  const months = MONTHS.map((m, i) => ({ value: i, label: m.slice(0, 3) }));
+  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => ({ value: minYear + i, label: String(minYear + i) })).reverse();
+  return (
+    <View style={{ gap: 14 }}>
+      <Wheel label="Day" options={days} value={day} onChange={onChangeDay} />
+      <Wheel label="Month" options={months} value={month} onChange={onChangeMonth} />
+      <Wheel label="Year" options={years} value={year} onChange={onChangeYear} />
     </View>
   );
 }
