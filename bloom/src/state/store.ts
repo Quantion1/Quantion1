@@ -47,6 +47,8 @@ interface State {
   /** Records a moment as having happened at `at` (an ISO timestamp). */
   captureMoment: (id: string, at: string) => void;
   snoozeMoment: (id: string) => void;
+  /** Corrects (or fills in) when a captured moment actually happened. */
+  redateMoment: (id: string, at: string) => void;
   hatch: (birthDate: string, babyName: string) => void;
 
   collectCard: (week: number) => void;
@@ -169,6 +171,13 @@ export const useStore = create<State>()(
       captureMoment: (id, at) =>
         set((s) =>
           s.progress.moments[id] !== undefined
+            ? {}
+            : { progress: { ...s.progress, moments: { ...s.progress.moments, [id]: at } } },
+        ),
+
+      redateMoment: (id, at) =>
+        set((s) =>
+          s.progress.moments[id] === undefined
             ? {}
             : { progress: { ...s.progress, moments: { ...s.progress.moments, [id]: at } } },
         ),

@@ -18,7 +18,6 @@ import { useScheme } from '@/theme/scheme';
 type Tab = 'moments' | 'cards' | 'badges';
 
 const shortDate = (at: string) => {
-  if (!at) return 'date not recorded';
   const d = new Date(at);
   return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`;
 };
@@ -239,24 +238,31 @@ function Chapter({
         </View>
       ) : (
         <>
-          {captured.map((m) => (
-            <View
-              key={m.id}
-              style={{
-                flexDirection: 'row', gap: 12, padding: 14, borderRadius: radius.lg,
-                backgroundColor: palette.card, borderWidth: 1, borderColor: palette.dot,
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>{m.emoji}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...type.heading, fontSize: 15.5, color: palette.ink }}>{m.title}</Text>
-                <Small>{m.done}</Small>
-                <Text style={{ ...type.label, color: palette.sage, marginTop: 4 }}>
-                  {shortDate(progress.moments[m.id])}
-                </Text>
-              </View>
-            </View>
-          ))}
+          {captured.map((m) => {
+            const at = progress.moments[m.id];
+            return (
+              // Openable: it is where the moment can be read back, and where a
+              // date that was never recorded gets filled in.
+              <Pressable
+                key={m.id}
+                onPress={() => onOpen(m)}
+                style={{
+                  flexDirection: 'row', gap: 12, padding: 14, borderRadius: radius.lg,
+                  backgroundColor: palette.card, borderWidth: 1, borderColor: palette.dot,
+                }}
+              >
+                <Text style={{ fontSize: 20 }}>{m.emoji}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...type.heading, fontSize: 15.5, color: palette.ink }}>{m.title}</Text>
+                  <Small>{m.done}</Small>
+                  <Text style={{ ...type.label, color: at ? palette.sage : palette.dotDeep, marginTop: 4 }}>
+                    {at ? shortDate(at) : 'NO DATE YET · TAP TO SET'}
+                  </Text>
+                </View>
+                <Text style={{ ...type.label, color: palette.inkFaint }}>OPEN</Text>
+              </Pressable>
+            );
+          })}
 
           {waiting.map((m) => (
             <Pressable
