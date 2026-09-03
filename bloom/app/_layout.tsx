@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ConfirmDialog } from '@/components/Confirm';
 import { Dot } from '@/components/Dot';
 import { Toast } from '@/components/Toast';
 import { useStore } from '@/state/store';
@@ -70,6 +71,7 @@ export default function RootLayout() {
         <Stack.Screen name="history" options={{ animation: 'slide_from_right' }} />
       </Stack>
       <Toast />
+      <ConfirmDialog />
     </SafeAreaProvider>
   );
 }

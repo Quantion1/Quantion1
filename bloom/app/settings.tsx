@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { confirmAlert } from '@/components/Confirm';
 import { Body, Button, Card, Chip, Field, Heading, Label, Rule, Segmented, Small, Title, Wrap, tap } from '@/components/ui';
 import { CARE_SYSTEMS, COUNTRY_ORDER } from '@/domain/care';
 import { DRINKS } from '@/domain/drinks';
@@ -134,7 +135,7 @@ export default function Settings() {
               tone="quiet"
               full
               onPress={() =>
-                Alert.alert('Replace everything?', 'This overwrites whatever is stored now.', [
+                confirmAlert('Replace everything?', 'This overwrites whatever is stored now.', [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Pregnancy', onPress: () => seedDemo('pregnancy') },
                   { text: 'Newborn', onPress: () => seedDemo('baby') },
@@ -148,7 +149,7 @@ export default function Settings() {
               tone="danger"
               full
               onPress={() =>
-                Alert.alert('Delete everything?', 'Every log, photo, plan, level and badge on this device. This cannot be undone.', [
+                confirmAlert('Delete everything?', 'Every log, photo, plan, level and badge on this device. This cannot be undone.', [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Delete it all', style: 'destructive', onPress: () => { resetAll(); router.replace('/onboarding'); } },
                 ])

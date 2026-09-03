@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { confirmAlert } from '@/components/Confirm';
 import { Body, Button, Card, Chip, Field, Heading, Label, Small, Title, Wrap, styles, tap } from '@/components/ui';
 import { careState, careSystem } from '@/domain/care';
 import type { PlanItem } from '@/domain/types';
@@ -137,7 +138,7 @@ export default function PlanScreen() {
             {dayItems.map((p) => (
               <Pressable
                 key={p.id}
-                onLongPress={() => Alert.alert('Delete this?', p.title, [{ text: 'Keep', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => deletePlan(p.id) }])}
+                onLongPress={() => confirmAlert('Delete this?', p.title, [{ text: 'Keep', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => deletePlan(p.id) }])}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.md, backgroundColor: palette.cardSunk }}
               >
                 <Text style={{ fontSize: 17 }}>{KINDS.find((k) => k.k === p.kind)?.emoji ?? '📌'}</Text>

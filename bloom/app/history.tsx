@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EntryLine } from '@/components/EntryLine';
 import { LockedRow } from '@/components/PremiumGate';
+import { confirmAlert } from '@/components/Confirm';
 import { Card, Chip, Empty, Heading, Small, Title, tap } from '@/components/ui';
 import { TRACKERS } from '@/domain/trackers';
 import { daysBetween, fromDayKey, toDayKey } from '@/lib/date';
@@ -67,7 +68,7 @@ export default function History() {
                 key={e.id}
                 entry={e}
                 onPress={() =>
-                  Alert.alert('Delete this entry?', '', [
+                  confirmAlert('Delete this entry?', '', [
                     { text: 'Keep', style: 'cancel' },
                     { text: 'Delete', style: 'destructive', onPress: () => deleteEntry(e.id) },
                   ])

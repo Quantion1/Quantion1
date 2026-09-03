@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LockedRow } from '@/components/PremiumGate';
+import { confirmAlert } from '@/components/Confirm';
 import { Body, Button, Card, Chip, Field, Heading, Label, Small, Title, Wrap, styles, tap } from '@/components/ui';
 import { formatRelative } from '@/lib/date';
 import { useNest } from '@/state/hooks';
@@ -150,7 +151,7 @@ export default function PhotosScreen() {
                 <Pressable
                   key={m.id}
                   onLongPress={() =>
-                    Alert.alert('Delete this photo?', m.caption, [
+                    confirmAlert('Delete this photo?', m.caption, [
                       { text: 'Keep', style: 'cancel' },
                       { text: 'Delete', style: 'destructive', onPress: () => deleteMemory(m.id) },
                     ])
