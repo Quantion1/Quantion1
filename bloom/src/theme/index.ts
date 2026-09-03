@@ -3,7 +3,7 @@
  *
  * Parchment and earth: a warm paper ground, warm brown ink, and a set of muted
  * accents that each own one part of the app. Dot's marigold is the only fully
- * saturated colour in the system and is reserved for the companion, level-ups
+ * saturated colour in the system and is reserved for the companion, captured moments
  * and the primary action — so the eye always knows where the reward is.
  */
 

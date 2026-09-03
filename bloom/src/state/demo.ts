@@ -1,8 +1,18 @@
 import { careSystem } from '@/domain/care';
-import { BABY_LEVELS, PREGNANCY_LEVELS } from '@/domain/levels';
+import { BABY_MOMENTS, PREGNANCY_MOMENTS } from '@/domain/moments';
 import { starterTiles } from '@/domain/trackers';
 import type { Entry, Memory, PlanItem, Profile, Progress, Stage, Tile } from '@/domain/types';
 import { addDays, toDayKey } from '@/lib/date';
+
+/** The demo's captured moments, dated to when they would plausibly have happened. */
+const capturedThrough = (
+  moments: typeof BABY_MOMENTS,
+  count: number,
+  dateOf: (openFrom: number) => Date,
+): Record<string, string> =>
+  Object.fromEntries(
+    moments.slice(0, count).map((m) => [m.id, dateOf(m.openFrom).toISOString()]),
+  );
 
 /** Deterministic PRNG so the demo set is identical on every load. */
 function rng(seed: number) {
@@ -138,9 +148,10 @@ export function buildDemo(stage: Stage): {
     );
 
     progress = {
-      pregnancyLevel: PREGNANCY_LEVELS.length,
-      babyLevel: 5,
-      claimed: [...PREGNANCY_LEVELS.map((l) => l.id), ...BABY_LEVELS.slice(0, 5).map((l) => l.id)],
+      moments: {
+        ...capturedThrough(PREGNANCY_MOMENTS, PREGNANCY_MOMENTS.length, (w) => addDays(birth, (w - 40) * 7)),
+        ...capturedThrough(BABY_MOMENTS, 5, (d) => addDays(birth, d)),
+      },
       snoozed: {},
       badges: [],
       daysOpened,
@@ -208,9 +219,7 @@ export function buildDemo(stage: Stage): {
     );
 
     progress = {
-      pregnancyLevel: 6,
-      babyLevel: 0,
-      claimed: PREGNANCY_LEVELS.slice(0, 6).map((l) => l.id),
+      moments: capturedThrough(PREGNANCY_MOMENTS, 6, (w) => addDays(due, (w - 40) * 7)),
       snoozed: {},
       badges: [],
       daysOpened,

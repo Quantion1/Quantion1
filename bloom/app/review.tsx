@@ -61,7 +61,7 @@ export default function Review() {
           <>
             <Card tint={palette.blueSoft}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <Dot stage={nest.dot as any} size={64} />
+                <Dot stage={nest.dot} size={64} />
                 <View style={{ flex: 1 }}>
                   <Heading>{review.headline}</Heading>
                   <Small>{review.sub}</Small>

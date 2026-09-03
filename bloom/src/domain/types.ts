@@ -2,6 +2,9 @@ import type { AccentName } from '@/theme';
 
 export type Stage = 'pregnancy' | 'baby';
 
+/** Dot's poses, in the order she grows through them. */
+export type DotPose = 'egg0' | 'egg1' | 'egg2' | 'egg3' | 'sleep' | 'tummy' | 'sit' | 'stand' | 'walk';
+
 export type TrackerKey =
   // baby
   | 'sleep' | 'breast' | 'bottle' | 'diaper' | 'weight' | 'tummy' | 'temp'
@@ -118,12 +121,12 @@ export interface Tile {
 }
 
 export interface Progress {
-  /** Claimed level within the current stage's ladder. */
-  pregnancyLevel: number;
-  babyLevel: number;
-  /** Level ids the parent has explicitly confirmed. */
-  claimed: string[];
-  /** Level ids dismissed with "not yet" — re-offered later. */
+  /**
+   * Captured moments: id → when it actually happened, as an ISO timestamp.
+   * An empty string means it was captured before the app asked for a date.
+   */
+  moments: Record<string, string>;
+  /** Moment ids dismissed with "not yet" — re-offered tomorrow. */
   snoozed: Record<string, string>;
   badges: string[];
   /** yyyy-mm-dd of every day the app was opened. */

@@ -19,7 +19,7 @@ const PLANS: { id: Plan; title: string; price: string; per: string; note?: strin
 
 const ROWS: [string, string, string][] = [
   ['Every tracker, unlimited logs', 'Yes', 'Yes'],
-  ['Levels, badges and Dot', 'All', 'All'],
+  ['Moments, badges and Dot', 'All', 'All'],
   ['Weekly cards', 'The Veg Aisle', 'Every pack'],
   ['Insights range', '7 days', '30 · 90 days'],
   ['Read-outs', 'First two', 'All'],

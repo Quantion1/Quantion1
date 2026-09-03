@@ -6,14 +6,16 @@ import { starterTiles } from '@/domain/trackers';
 import type {
   Entry, Memory, PlanItem, Profile, Progress, Settings, Stage, Subscription, Tile, TrackerKey,
 } from '@/domain/types';
-import { todayKey } from '@/lib/date';
+import { fromDayKey, todayKey } from '@/lib/date';
 
 export interface Toast {
   emoji: string;
   title: string;
   sub?: string;
+  /** A second line inside the full-screen version. */
+  body?: string;
   at: number;
-  /** A level-up gets the full celebration sheet rather than a passing toast. */
+  /** The whole-screen celebration rather than a passing toast. */
   big?: boolean;
 }
 
@@ -42,8 +44,9 @@ interface State {
   /** Move a tile to an absolute index — the drag-to-reorder gesture's only write. */
   moveTile: (key: string, to: number) => void;
 
-  claimLevel: (id: string, title: string, emoji: string) => void;
-  snoozeLevel: (id: string) => void;
+  /** Records a moment as having happened at `at` (an ISO timestamp). */
+  captureMoment: (id: string, at: string) => void;
+  snoozeMoment: (id: string) => void;
   hatch: (birthDate: string, babyName: string) => void;
 
   collectCard: (week: number) => void;
@@ -87,9 +90,7 @@ const defaultSettings: Settings = {
 };
 
 const emptyProgress: Progress = {
-  pregnancyLevel: 0,
-  babyLevel: 0,
-  claimed: [],
+  moments: {},
   snoozed: {},
   badges: [],
   daysOpened: [],
@@ -98,6 +99,20 @@ const emptyProgress: Progress = {
   marks: {},
   hatched: false,
 };
+
+/**
+ * Stores saved when moments were still numbered levels keep a `claimed` array
+ * and no dates. Carry the ids across — an empty timestamp reads as "captured,
+ * date unknown" everywhere — and drop the counters, which no longer exist.
+ */
+function migrateProgress(progress: Progress): Progress {
+  const legacy = progress as Progress & { claimed?: string[] };
+  if (!Array.isArray(legacy.claimed)) return progress;
+  const moments = { ...progress.moments };
+  for (const id of legacy.claimed) if (moments[id] === undefined) moments[id] = '';
+  const { claimed, ...rest } = legacy;
+  return { ...rest, moments };
+}
 
 const uid = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -149,29 +164,28 @@ export const useStore = create<State>()(
           return { tiles: next };
         }),
 
-      claimLevel: (id, title, emoji) =>
-        set((s) => {
-          if (s.progress.claimed.includes(id)) return {};
-          const claimed = [...s.progress.claimed, id];
-          const isPregnancy = id.startsWith('p_');
-          return {
-            progress: {
-              ...s.progress,
-              claimed,
-              pregnancyLevel: isPregnancy ? s.progress.pregnancyLevel + 1 : s.progress.pregnancyLevel,
-              babyLevel: isPregnancy ? s.progress.babyLevel : s.progress.babyLevel + 1,
-            },
-            toast: { emoji, title, sub: 'Level up', at: Date.now(), big: true },
-          };
-        }),
+      // No toast: capturing a moment has its own screen, and the celebration
+      // belongs there. Auto-captured moments raise their own.
+      captureMoment: (id, at) =>
+        set((s) =>
+          s.progress.moments[id] !== undefined
+            ? {}
+            : { progress: { ...s.progress, moments: { ...s.progress.moments, [id]: at } } },
+        ),
 
-      snoozeLevel: (id) =>
+      snoozeMoment: (id) =>
         set((s) => ({ progress: { ...s.progress, snoozed: { ...s.progress.snoozed, [id]: todayKey() } } })),
 
       hatch: (birthDate, babyName) =>
         set((s) => ({
           profile: { ...s.profile, stage: 'baby', birthDate, babyName: babyName || s.profile.babyName },
-          progress: { ...s.progress, hatched: true, claimed: [...s.progress.claimed, 'b_home'], babyLevel: 1 },
+          progress: {
+            ...s.progress,
+            hatched: true,
+            // Dated to the birth itself, not to the evening someone got round
+            // to opening the app.
+            moments: { ...s.progress.moments, b_home: fromDayKey(birthDate).toISOString() },
+          },
           tiles: starterTiles('baby').map((key) => ({ key, span: 1 as const })),
           toast: { emoji: '🐣', title: 'Dot hatched', sub: 'Player two has entered', at: Date.now(), big: true },
         })),
@@ -269,7 +283,7 @@ export const useStore = create<State>()(
           ...p,
           profile: { ...current.profile, ...p.profile },
           settings: { ...current.settings, ...p.settings },
-          progress: { ...current.progress, ...p.progress },
+          progress: migrateProgress({ ...current.progress, ...p.progress }),
           sub: { ...current.sub, ...p.sub },
         };
       },

@@ -28,7 +28,7 @@ export function babyAge(birthDate: string, now = new Date()) {
   };
 }
 
-/** Position on whichever ladder is live: weeks in pregnancy, days after birth. */
+/** How far in they are: weeks of pregnancy, or days since the birth. */
 export function position(profile: Profile, now = new Date()): number {
   if (profile.stage === 'pregnancy') return profile.dueDate ? gestation(profile.dueDate, now).week : 0;
   return profile.birthDate ? babyAge(profile.birthDate, now).days : 0;

@@ -89,6 +89,8 @@ export function DateInput({
           label="Year"
           value={year}
           flex={1.5}
+          len={4}
+          ph="YYYY"
           inputRef={yearRef}
           onChangeText={(v) => {
             const y = digits(v, 4);
@@ -116,13 +118,16 @@ function Slash() {
 }
 
 function Box({
-  label, value, flex, inputRef, onChangeText,
+  label, value, flex, inputRef, onChangeText, len = 2, ph,
 }: {
   label: string;
   value: string;
   flex: number;
   inputRef?: React.RefObject<TextInput | null>;
   onChangeText: (v: string) => void;
+  /** Digits this box accepts. */
+  len?: number;
+  ph?: string;
 }) {
   const [focused, setFocused] = useState(false);
   return (
@@ -134,11 +139,11 @@ function Box({
         onChangeText={onChangeText}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        placeholder={label === 'Year' ? 'YYYY' : label === 'Month' ? 'MM' : 'DD'}
+        placeholder={ph ?? label.slice(0, 2).toUpperCase()}
         placeholderTextColor={palette.inkFaint}
         keyboardType="number-pad"
         inputMode="numeric"
-        maxLength={label === 'Year' ? 4 : 2}
+        maxLength={len}
         style={[
           {
             borderWidth: 1.5,
@@ -157,6 +162,63 @@ function Box({
           Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null,
         ]}
       />
+    </View>
+  );
+}
+
+/**
+ * The clock half of the same idea: two typed boxes, hours and minutes. It
+ * reports '' until both read as a real time, so a half-typed hour never counts.
+ */
+export function TimeInput({ value, onChange }: { value: string; onChange: (hhmm: string) => void }) {
+  const initial = value ? value.split(':') : ['', ''];
+  const [hour, setHour] = useState(initial[0] ?? '');
+  const [minute, setMinute] = useState(initial[1] ?? '');
+  const minuteRef = useRef<TextInput>(null);
+
+  const ok = hour.length > 0 && minute.length > 0 && Number(hour) < 24 && Number(minute) < 60;
+
+  const push = (h: string, m: string) => {
+    const whole = h.length > 0 && m.length > 0 && Number(h) < 24 && Number(m) < 60;
+    onChange(whole ? `${h.padStart(2, '0')}:${m.padStart(2, '0')}` : '');
+  };
+  const digits = (v: string) => v.replace(/\D/g, '').slice(0, 2);
+
+  return (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+        <Box
+          label="Hour"
+          value={hour}
+          flex={1}
+          ph="HH"
+          onChangeText={(v) => {
+            const h = digits(v);
+            setHour(h);
+            push(h, minute);
+            if (h.length === 2 || Number(h) > 2) minuteRef.current?.focus();
+          }}
+        />
+        <Text style={{ ...type.body, color: palette.inkFaint, paddingBottom: 14 }}>:</Text>
+        <Box
+          label="Minute"
+          value={minute}
+          flex={1}
+          ph="MM"
+          inputRef={minuteRef}
+          onChangeText={(v) => {
+            const m = digits(v);
+            setMinute(m);
+            push(hour, m);
+          }}
+        />
+        <View style={{ flex: 1.5 }} />
+      </View>
+      {!ok && (hour || minute) ? (
+        <Text style={{ ...type.small, color: palette.danger, minHeight: 18 }}>
+          Hours run 0 to 23, minutes 0 to 59.
+        </Text>
+      ) : null}
     </View>
   );
 }

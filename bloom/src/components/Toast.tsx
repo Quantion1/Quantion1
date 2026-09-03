@@ -8,7 +8,7 @@ import { Body, Button, Title } from './ui';
 import { Dot } from './Dot';
 import { useNest } from '@/state/hooks';
 
-/** Small confirmations slide in at the top; a level-up gets the whole screen. */
+/** Small confirmations slide in at the top; the rare big one takes the screen. */
 export function Toast() {
   const toast = useStore((s) => s.toast);
   const clear = useStore((s) => s.clearToast);
@@ -33,10 +33,10 @@ export function Toast() {
       <Modal transparent animationType="fade" onRequestClose={clear}>
         <View style={{ flex: 1, backgroundColor: palette.backdrop, alignItems: 'center', justifyContent: 'center', padding: 28 }}>
           <View style={[{ backgroundColor: palette.card, borderRadius: radius.xl, padding: 26, alignItems: 'center', gap: 10, width: '100%', maxWidth: 340 }, shadow.lift]}>
-            <Dot stage={nest.dot as any} size={130} />
+            <Dot stage={nest.dot} size={130} />
             <Text style={{ ...type.label, color: palette.dotDeep, textTransform: 'uppercase' }}>{toast.sub ?? 'Nice'}</Text>
             <Title style={{ textAlign: 'center' }}>{toast.title}</Title>
-            <Body style={{ textAlign: 'center' }}>Dot noticed.</Body>
+            <Body style={{ textAlign: 'center' }}>{toast.body ?? 'Dot noticed.'}</Body>
             <Button title="Good" tone="ink" full onPress={clear} style={{ marginTop: 6 }} />
           </View>
         </View>

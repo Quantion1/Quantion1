@@ -124,7 +124,7 @@ export default function Settings() {
                 <Button title="Update" tone="quiet" size="sm" style={{ alignSelf: 'flex-start' }} disabled={!due || due === profile.dueDate} onPress={() => setProfile({ dueDate: due })} />
                 <Rule style={{ marginVertical: 8 }} />
                 <Heading>Baby arrived?</Heading>
-                <Body style={{ fontSize: 13.5 }}>Hatching keeps every entry, level and card. It only changes what the app tracks.</Body>
+                <Body style={{ fontSize: 13.5 }}>Hatching keeps every entry, moment and card. It only changes what the app tracks.</Body>
                 <Button title="Crack the egg" tone="dot" full onPress={() => router.push('/hatch')} />
               </>
             ) : (
@@ -169,7 +169,7 @@ export default function Settings() {
               tone="danger"
               full
               onPress={() =>
-                confirmAlert('Delete everything?', 'Every log, photo, plan, level and badge on this device. This cannot be undone.', [
+                confirmAlert('Delete everything?', 'Every log, photo, plan, moment and badge on this device. This cannot be undone.', [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Delete it all', style: 'destructive', onPress: () => { resetAll(); router.replace('/onboarding'); } },
                 ])
@@ -185,7 +185,7 @@ export default function Settings() {
             doctor or consultatiebureau.
           </Small>
           <Small style={{ textAlign: 'center', fontSize: 10.5 }}>
-            {nest.stage} · level {nest.level} · {progress.badges.length} badges · {progress.cards.length} cards
+            {nest.stage} · {nest.captured} moments · {progress.badges.length} badges · {progress.cards.length} cards
           </Small>
         </View>
       </ScrollView>

@@ -24,7 +24,7 @@ export default function Onboarding() {
   const router = useRouter();
   const setProfile = useStore((s) => s.setProfile);
   const setTiles = useStore((s) => s.setTiles);
-  const claimLevel = useStore((s) => s.claimLevel);
+  const captureMoment = useStore((s) => s.captureMoment);
   const seedDemo = useStore((s) => s.seedDemo);
 
   const today = new Date();
@@ -63,8 +63,12 @@ export default function Onboarding() {
         onboarded: true,
       });
       setTiles([{ key: 'today', span: 2 }, ...starterTiles(stage).map((key) => ({ key, span: 1 as const }))]);
-      // The first level is a given — you are here, reading this.
-      claimLevel(stage === 'pregnancy' ? 'p_two_lines' : 'b_home', stage === 'pregnancy' ? 'Two lines' : 'Home', stage === 'pregnancy' ? '🧪' : '🏠');
+      // The first moment is a given — you are here, reading this. A newborn's
+      // is dated to the birth; a positive test has no date but the day you said so.
+      captureMoment(
+        stage === 'pregnancy' ? 'p_two_lines' : 'b_home',
+        stage === 'baby' && birthDate ? fromDayKey(birthDate).toISOString() : new Date().toISOString(),
+      );
     }
     ping();
     router.replace('/(tabs)/home');

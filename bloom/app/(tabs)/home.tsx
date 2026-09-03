@@ -6,17 +6,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CardFace } from '@/components/CardFace';
 import { Dot } from '@/components/Dot';
 import { Gear } from '@/components/icons';
-import { LevelPrompt } from '@/components/LevelPrompt';
+import { MomentPrompt } from '@/components/MomentPrompt';
 import { Rhythm } from '@/components/Rhythm';
 import { EditBanner, TileGrid } from '@/components/TileGrid';
 import { Body, Button, Card, Heading, Label, Small, Title, styles, tap } from '@/components/ui';
 import { devNote } from '@/domain/cards';
-import { ladder } from '@/domain/levels';
 import { tileMeta } from '@/domain/describe';
 import { tracker } from '@/domain/trackers';
 import type { Tile as TileT } from '@/domain/types';
 import {
-  useBadgeSync, useLevelPrompt, useNest, useOpenTracking, useRhythm, useTodayEntries,
+  useAutoMoments, useBadgeSync, useMomentAsk, useNest, useOpenTracking, useRhythm, useTodayEntries,
 } from '@/state/hooks';
 import { useSettings, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
@@ -32,8 +31,7 @@ export default function HomeScreen() {
   const entries = useStore((s) => s.entries);
   const progress = useStore((s) => s.progress);
   const addEntry = useStore((s) => s.addEntry);
-  const claimLevel = useStore((s) => s.claimLevel);
-  const snoozeLevel = useStore((s) => s.snoozeLevel);
+  const snoozeMoment = useStore((s) => s.snoozeMoment);
   const collectCard = useStore((s) => s.collectCard);
   const removeTile = useStore((s) => s.removeTile);
   const resizeTile = useStore((s) => s.resizeTile);
@@ -41,13 +39,13 @@ export default function HomeScreen() {
 
   const today = useTodayEntries();
   const rhythm = useRhythm();
-  const prompt = useLevelPrompt();
+  const ask = useMomentAsk();
   const [editing, setEditing] = useState(false);
   const [gridWidth, setGridWidth] = useState(0);
   useBadgeSync();
   useOpenTracking();
+  useAutoMoments();
 
-  const total = ladder(nest.stage).length;
   const weekCard = nest.stage === 'pregnancy' && nest.week >= 4
     ? { week: Math.min(40, nest.week), collected: progress.cards.includes(Math.min(40, nest.week)) }
     : null;
@@ -70,14 +68,14 @@ export default function HomeScreen() {
         {/* ───────────────────────────────────────────────────── header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Pressable onPress={() => { tap(); router.push('/(tabs)/journey'); }}>
-            <Dot stage={nest.dot as any} size={78} />
+            <Dot stage={nest.dot} size={78} />
           </Pressable>
           <View style={{ flex: 1 }}>
             <Title numberOfLines={1}>{nest.title}</Title>
             <Small>{nest.sub}</Small>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
               <View style={{ backgroundColor: palette.dotSoft, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 3 }}>
-                <Text style={{ ...type.label, color: palette.dotDeep }}>LEVEL {nest.level}</Text>
+                <Text style={{ ...type.label, color: palette.dotDeep }}>{nest.era.toUpperCase()}</Text>
               </View>
               <Rhythm marks={rhythm.marks} size={13} />
             </View>
@@ -87,19 +85,18 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* ──────────────────────────────────────────── the level question */}
-        {prompt?.ready && (
-          <LevelPrompt
-            level={prompt.level}
-            order={prompt.level.order}
-            total={total}
-            position={nest.position}
+        {/* ─────────────────────────────────────────────── the one question */}
+        {ask && (
+          <MomentPrompt
+            ask={ask}
             stage={nest.stage}
-            onClaim={() => {
-              claimLevel(prompt.level.id, prompt.level.title, prompt.level.emoji);
-              if (prompt.level.id === 'p_term') return;
-            }}
-            onSnooze={() => snoozeLevel(prompt.level.id)}
+            onOpen={() =>
+              router.push({
+                pathname: '/moment/[id]',
+                params: { id: ask.moment.id, ...(ask.noticed ? { at: ask.noticed.at } : {}) },
+              })
+            }
+            onSnooze={() => snoozeMoment(ask.moment.id)}
           />
         )}
 

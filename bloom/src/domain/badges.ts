@@ -2,7 +2,7 @@ import type { Entry, Progress } from './types';
 import { toDayKey } from '@/lib/date';
 
 /**
- * Badges reward the logging, not the baby. Levels cover the baby's real life;
+ * Badges reward the logging, not the baby. Moments cover the baby's real life;
  * these cover yours — showing up at 3am, filling in a hundred nappies, keeping
  * the thing going. No rarity, no tiers, nothing to buy.
  */

@@ -2,11 +2,11 @@ import { useEffect, useMemo } from 'react';
 
 import { evaluateBadges } from '@/domain/badges';
 import { availableCards, cardFor } from '@/domain/cards';
-import { dotStage, nextLevel } from '@/domain/levels';
+import { capturedCount, dotPose, eraStates, isCaptured, momentById, pendingAsk } from '@/domain/moments';
 import { babyAge, gestation, position } from '@/domain/stage';
 import { availability, TRACKERS } from '@/domain/trackers';
-import type { Entry } from '@/domain/types';
-import { todayKey, toDayKey } from '@/lib/date';
+import type { Entry, Progress } from '@/domain/types';
+import { addDays, fromDayKey, todayKey, toDayKey } from '@/lib/date';
 import { useStore } from './store';
 
 export function useTodayEntries(): Entry[] {
@@ -33,8 +33,9 @@ export function useNest() {
         progress: g.progress,
         title: `Week ${g.week}`,
         sub: `${Math.max(0, g.daysLeft)} days to go · trimester ${g.trimester}`,
-        level: progress.pregnancyLevel,
-        dot: dotStage('pregnancy', progress.pregnancyLevel, g.week),
+        era: openEra('pregnancy', progress, pos),
+        captured: capturedCount('pregnancy', progress),
+        dot: dotPose('pregnancy', progress, g.week, 0),
       };
     }
     const a = profile.birthDate ? babyAge(profile.birthDate) : { days: 0, weeks: 0, months: 0, progress: 0, label: '' };
@@ -47,23 +48,54 @@ export function useNest() {
       progress: a.progress,
       title: profile.babyName || 'The Nugget',
       sub: a.label,
-      level: progress.babyLevel,
-      dot: dotStage('baby', progress.babyLevel, 0),
+      era: openEra('baby', progress, pos),
+      captured: capturedCount('baby', progress),
+      dot: dotPose('baby', progress, 0, a.days),
     };
   }, [profile, progress]);
 }
 
-/** The one live level question, if there is one. */
-export function useLevelPrompt() {
+/** The name of the chapter the parent is in — what Dot wears instead of a level. */
+function openEra(stage: 'pregnancy' | 'baby', progress: Progress, position: number): string {
+  const open = eraStates(stage, progress, position).filter((e) => e.open);
+  return open.length ? open[open.length - 1].era.name : eraStates(stage, progress, position)[0].era.name;
+}
+
+/** The one thing Home puts to the parent, if there is anything. */
+export function useMomentAsk() {
   const profile = useStore((s) => s.profile);
   const progress = useStore((s) => s.progress);
   const entries = useStore((s) => s.entries);
   const nest = useNest();
 
   return useMemo(
-    () => nextLevel(profile.stage, progress, entries, nest.position, todayKey()),
+    () => pendingAsk(profile.stage, progress, entries, nest.position, todayKey()),
     [profile.stage, progress, entries, nest.position],
   );
+}
+
+/**
+ * Moments the dates alone settle. Nobody should be asked to confirm that they
+ * reached thirty-seven weeks, so it captures itself — dated to the day it
+ * actually happened, not the day the app noticed.
+ */
+export function useAutoMoments() {
+  const profile = useStore((s) => s.profile);
+  const progress = useStore((s) => s.progress);
+  const capture = useStore((s) => s.captureMoment);
+  const showToast = useStore((s) => s.showToast);
+  const nest = useNest();
+
+  useEffect(() => {
+    if (!profile.onboarded) return;
+    if (profile.stage !== 'pregnancy' || !profile.dueDate) return;
+    if (nest.week < 37 || isCaptured(progress, 'p_term')) return;
+    const moment = momentById('p_term');
+    if (!moment) return;
+    // Thirty-seven weeks is three weeks before the due date, whenever that fell.
+    capture('p_term', addDays(fromDayKey(profile.dueDate), -21).toISOString());
+    showToast({ emoji: moment.emoji, title: moment.title, sub: 'A moment', body: moment.body, big: true });
+  }, [profile, progress, nest.week, capture, showToast]);
 }
 
 /** Trackers split by whether they make sense right now. */

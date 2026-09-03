@@ -2,7 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Image, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, Path, Rect } from 'react-native-svg';
 
-export type DotStage = 'egg0' | 'egg1' | 'egg2' | 'egg3' | 'sleep' | 'tummy' | 'sit' | 'stand' | 'walk';
+import type { DotPose } from '@/domain/types';
+
+/** Kept as a local name because every call site says `stage=`. */
+export type DotStage = DotPose;
 
 /**
  * Dot's real look — one static image per stage. Drop a picture at each of these
