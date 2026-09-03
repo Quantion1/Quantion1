@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CardFace } from '@/components/CardFace';
 import { Dot } from '@/components/Dot';
+import { Gear } from '@/components/icons';
 import { LevelPrompt } from '@/components/LevelPrompt';
 import { Rhythm } from '@/components/Rhythm';
 import { EditBanner, TileGrid } from '@/components/TileGrid';
@@ -79,7 +80,7 @@ export default function HomeScreen() {
             </View>
           </View>
           <Pressable onPress={() => { tap(); router.push('/settings'); }} hitSlop={12}>
-            <Text style={{ fontSize: 19, color: palette.inkFaint }}>⚙</Text>
+            <Gear size={22} color={palette.inkFaint} />
           </Pressable>
         </View>
 
