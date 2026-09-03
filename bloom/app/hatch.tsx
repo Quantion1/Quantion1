@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DateInput } from '@/components/DateInput';
 import { Dot } from '@/components/Dot';
-import { Body, Button, Card, Field, Heading, Label, Small, Title, ping, tap } from '@/components/ui';
-import { todayKey } from '@/lib/date';
+import { Body, Button, Card, Field, Heading, Label, Title, ping, tap } from '@/components/ui';
+import { addDays, todayKey } from '@/lib/date';
 import { useStore } from '@/state/store';
 import { palette } from '@/theme';
 
@@ -16,7 +17,8 @@ export default function Hatch() {
   const [name, setName] = useState('');
   const [date, setDate] = useState(todayKey());
 
-  const valid = /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(+new Date(date));
+  // DateInput reports '' for anything that is not a whole, in-range date.
+  const valid = !!date;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.paper }} edges={['top', 'bottom']}>
@@ -45,9 +47,8 @@ export default function Hatch() {
         </View>
 
         <View style={{ gap: 8 }}>
-          <Label>Born on (YYYY-MM-DD)</Label>
-          <Field value={date} onChangeText={setDate} placeholder="2026-09-03" />
-          {!valid && <Small style={{ color: palette.danger }}>That date does not parse.</Small>}
+          <Label>Born on</Label>
+          <DateInput value={date} onChange={setDate} min={addDays(new Date(), -60)} max={new Date()} outOfRange="A birth date can't be in the future." />
         </View>
 
         <Button

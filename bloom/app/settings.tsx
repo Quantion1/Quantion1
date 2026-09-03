@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { confirmAlert } from '@/components/Confirm';
+import { DateInput } from '@/components/DateInput';
 import { Body, Button, Card, Chip, Field, Heading, Label, Rule, Segmented, Small, Title, Wrap, tap } from '@/components/ui';
 import { CARE_SYSTEMS, COUNTRY_ORDER } from '@/domain/care';
 import { DRINKS } from '@/domain/drinks';
@@ -26,7 +27,6 @@ export default function Settings() {
 
   const [due, setDue] = useState(profile.dueDate ?? '');
   const [birth, setBirth] = useState(profile.birthDate ?? '');
-  const valid = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(+new Date(v));
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.paper }} edges={['top', 'bottom']}>
@@ -99,9 +99,9 @@ export default function Settings() {
 
             {profile.stage === 'pregnancy' ? (
               <>
-                <Label>Due date (YYYY-MM-DD)</Label>
-                <Field value={due} onChangeText={setDue} placeholder="2026-12-01" />
-                <Button title="Update" tone="quiet" size="sm" style={{ alignSelf: 'flex-start' }} disabled={!valid(due)} onPress={() => setProfile({ dueDate: due })} />
+                <Label>Due date</Label>
+                <DateInput value={due} onChange={setDue} />
+                <Button title="Update" tone="quiet" size="sm" style={{ alignSelf: 'flex-start' }} disabled={!due || due === profile.dueDate} onPress={() => setProfile({ dueDate: due })} />
                 <Rule style={{ marginVertical: 8 }} />
                 <Heading>Baby arrived?</Heading>
                 <Body style={{ fontSize: 13.5 }}>Hatching keeps every entry, level and card. It only changes what the app tracks.</Body>
@@ -111,9 +111,9 @@ export default function Settings() {
               <>
                 <Label>Baby's name</Label>
                 <Field value={profile.babyName} onChangeText={(v) => setProfile({ babyName: v })} placeholder="Ada" />
-                <Label>Born on (YYYY-MM-DD)</Label>
-                <Field value={birth} onChangeText={setBirth} placeholder="2026-05-01" />
-                <Button title="Update" tone="quiet" size="sm" style={{ alignSelf: 'flex-start' }} disabled={!valid(birth)} onPress={() => setProfile({ birthDate: birth })} />
+                <Label>Born on</Label>
+                <DateInput value={birth} onChange={setBirth} max={new Date()} />
+                <Button title="Update" tone="quiet" size="sm" style={{ alignSelf: 'flex-start' }} disabled={!birth || birth === profile.birthDate} onPress={() => setProfile({ birthDate: birth })} />
                 <Wrap>
                   {(['girl', 'boy', 'unknown'] as const).map((s) => (
                     <Chip key={s} small label={s === 'unknown' ? 'Rather not say' : s} selected={profile.babySex === s} onPress={() => setProfile({ babySex: s })} />

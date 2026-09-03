@@ -3,13 +3,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DateInput } from '@/components/DateInput';
 import { Dot } from '@/components/Dot';
 import { Body, Button, Card, Chip, Field, Heading, Label, Small, Title, Wrap, ping, tap } from '@/components/ui';
 import { CARE_SYSTEMS, COUNTRY_ORDER } from '@/domain/care';
 import { cardFor } from '@/domain/cards';
+import { babyAge, gestation } from '@/domain/stage';
 import { starterTiles } from '@/domain/trackers';
 import type { Stage } from '@/domain/types';
-import { addDays, daysBetween, MONTHS, toDayKey } from '@/lib/date';
+import { addDays, fromDayKey, MONTHS } from '@/lib/date';
 import { useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
 
@@ -23,25 +25,26 @@ export default function Onboarding() {
   const seedDemo = useStore((s) => s.seedDemo);
 
   const today = new Date();
-  const sixWeeksAgo = addDays(today, -42);
 
   const [step, setStep] = useState(0);
   const [stage, setStage] = useState<Stage>('pregnancy');
-  const [week, setWeek] = useState(20);
-  const [birthDay, setBirthDay] = useState(sixWeeksAgo.getDate());
-  const [birthMonth, setBirthMonth] = useState(sixWeeksAgo.getMonth());
-  const [birthYear, setBirthYear] = useState(sixWeeksAgo.getFullYear());
+  // Both are YYYY-MM-DD, or '' until a whole date has been typed in.
+  const [dueDate, setDueDate] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [parentName, setParentName] = useState('');
   const [babyName, setBabyName] = useState('');
   const [country, setCountry] = useState('NL');
 
-  const dueDate = toDayKey(addDays(new Date(), (40 - week) * 7));
+  // A due date can be a few weeks past, for anyone overdue, and at most a whole
+  // pregnancy ahead; a birth date is any day up to today.
+  const dueMin = addDays(today, -21);
+  const dueMax = addDays(today, 294);
+  const birthMin = addDays(today, -365 * 3);
 
-  const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
-  const clampedBirthDay = Math.min(birthDay, daysInMonth(birthYear, birthMonth));
-  const birthDateObj = new Date(birthYear, birthMonth, clampedBirthDay) > today ? today : new Date(birthYear, birthMonth, clampedBirthDay);
-  const birthDate = toDayKey(birthDateObj);
-  const weeksOld = Math.max(0, Math.floor(daysBetween(birthDateObj, today) / 7));
+  const gest = dueDate ? gestation(dueDate) : undefined;
+  const week = gest ? Math.min(40, Math.max(4, gest.week)) : 0;
+  const age = birthDate ? babyAge(birthDate) : undefined;
+  const dated = stage === 'pregnancy' ? !!dueDate : !!birthDate;
 
   const finish = (demo: boolean) => {
     if (demo) {
@@ -52,8 +55,8 @@ export default function Onboarding() {
         babyName: babyName.trim(),
         stage,
         country,
-        dueDate: stage === 'pregnancy' ? dueDate : undefined,
-        birthDate: stage === 'baby' ? birthDate : undefined,
+        dueDate: stage === 'pregnancy' ? dueDate || undefined : undefined,
+        birthDate: stage === 'baby' ? birthDate || undefined : undefined,
         onboarded: true,
       });
       setTiles([{ key: 'today', span: 2 }, ...starterTiles(stage).map((key) => ({ key, span: 1 as const }))]);
@@ -103,35 +106,47 @@ export default function Onboarding() {
           <View style={{ gap: 16 }}>
             {stage === 'pregnancy' ? (
               <>
-                <Title>How far along?</Title>
-                <Card style={{ alignItems: 'center', gap: 6 }}>
-                  <Text style={{ fontSize: 46 }}>{cardFor('garden', week).emoji}</Text>
-                  <Title style={{ fontSize: 26 }}>Week {week}</Title>
-                  <Body style={{ textAlign: 'center' }}>
-                    About a {cardFor('garden', week).size} · due around {dueDate}
-                  </Body>
-                </Card>
-                <Scale value={week} min={4} max={40} onChange={setWeek} />
+                <Title>When are you due?</Title>
+                <Body>The date from your dating scan, or your best guess. You can change it any time in settings.</Body>
+                <DateInput
+                  value={dueDate}
+                  onChange={setDueDate}
+                  min={dueMin}
+                  max={dueMax}
+                  outOfRange="A due date should be within the next forty-two weeks (or up to three weeks past)."
+                />
+                {gest ? (
+                  <Card style={{ alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 46 }}>{cardFor('garden', week).emoji}</Text>
+                    <Title style={{ fontSize: 26 }}>Week {gest.week}{gest.day ? ` + ${gest.day}` : ''}</Title>
+                    <Body style={{ textAlign: 'center' }}>
+                      About a {cardFor('garden', week).size} · {gest.daysLeft >= 0 ? `${gest.daysLeft} days to go` : `${-gest.daysLeft} days over`}
+                    </Body>
+                  </Card>
+                ) : (
+                  <Waiting text="Fill the date in and we'll work out which week you're on." />
+                )}
               </>
             ) : (
               <>
                 <Title>When was the baby born?</Title>
-                <Card style={{ alignItems: 'center', gap: 6 }}>
-                  <Dot stage={weeksOld < 12 ? 'sleep' : weeksOld < 26 ? 'tummy' : 'sit'} size={110} />
-                  <Title style={{ fontSize: 26 }}>{weeksOld} week{weeksOld === 1 ? '' : 's'} old</Title>
-                  <Body>Born {MONTHS[birthMonth]} {clampedBirthDay}, {birthYear}</Body>
-                </Card>
-                <DateWheels
-                  day={clampedBirthDay}
-                  month={birthMonth}
-                  year={birthYear}
-                  maxDay={daysInMonth(birthYear, birthMonth)}
-                  minYear={today.getFullYear() - 2}
-                  maxYear={today.getFullYear()}
-                  onChangeDay={setBirthDay}
-                  onChangeMonth={setBirthMonth}
-                  onChangeYear={setBirthYear}
+                <Body>The day of birth. Everything the app shows is counted from it.</Body>
+                <DateInput
+                  value={birthDate}
+                  onChange={setBirthDate}
+                  min={birthMin}
+                  max={today}
+                  outOfRange="A birth date can't be in the future, and Nest covers the first three years."
                 />
+                {age ? (
+                  <Card style={{ alignItems: 'center', gap: 6 }}>
+                    <Dot stage={age.weeks < 12 ? 'sleep' : age.weeks < 26 ? 'tummy' : 'sit'} size={110} />
+                    <Title style={{ fontSize: 26 }}>{age.label}</Title>
+                    <Body>Born {fromDayKey(birthDate).getDate()} {MONTHS[fromDayKey(birthDate).getMonth()]} {fromDayKey(birthDate).getFullYear()}</Body>
+                  </Card>
+                ) : (
+                  <Waiting text="Fill the date in and we'll work out how old the baby is." />
+                )}
               </>
             )}
           </View>
@@ -165,7 +180,14 @@ export default function Onboarding() {
 
       <View style={{ padding: 22, paddingTop: 0, gap: 10 }}>
         {step < STEPS - 1 ? (
-          <Button title="Continue" tone="ink" size="lg" full onPress={() => { tap(); setStep((s) => s + 1); }} />
+          <Button
+            title="Continue"
+            tone="ink"
+            size="lg"
+            full
+            disabled={step === 2 && !dated}
+            onPress={() => { tap(); setStep((s) => s + 1); }}
+          />
         ) : (
           <>
             <Button title="Start with nothing logged" tone="ink" size="lg" full onPress={() => finish(false)} />
@@ -207,87 +229,12 @@ function Choice({ emoji, title, text, on, onPress }: { emoji: string; title: str
   );
 }
 
-/** A horizontal number scale — friendlier than typing a date, and no extra dependency. */
-function Scale({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (v: number) => void }) {
-  const steps = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+/** Stands in for the summary card until a whole date has been typed. */
+function Waiting({ text }: { text: string }) {
   return (
-    <View style={{ gap: 12 }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
-        {steps.map((s) => (
-          <Text
-            key={s}
-            onPress={() => { tap(); onChange(s); }}
-            style={{
-              width: 42, textAlign: 'center', paddingVertical: 11, borderRadius: radius.md, overflow: 'hidden',
-              backgroundColor: s === value ? palette.ink : palette.cardSunk,
-              color: s === value ? palette.paper : palette.inkSoft,
-              ...type.bodyMed,
-            }}
-          >
-            {s}
-          </Text>
-        ))}
-      </ScrollView>
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Button title="−1" tone="quiet" size="sm" onPress={() => onChange(Math.max(min, value - 1))} />
-        <Button title="+1" tone="quiet" size="sm" onPress={() => onChange(Math.min(max, value + 1))} />
-      </View>
-    </View>
-  );
-}
-
-/** One scrollable row of pick-one options — the building block behind DateWheels. */
-function Wheel({ label, options, value, onChange }: { label: string; options: { value: number; label: string }[]; value: number; onChange: (v: number) => void }) {
-  const scrollRef = useRef<ScrollView>(null);
-
-  useEffect(() => {
-    const idx = options.findIndex((o) => o.value === value);
-    if (idx < 0) return;
-    // Rough per-item width (they vary a little with label length) — good enough to
-    // bring the current selection on screen without the user hunting for it.
-    scrollRef.current?.scrollTo({ x: Math.max(0, idx * 48 - 60), animated: false });
-    // Only re-run when the selected value moves to a different index — not on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
-
-  return (
-    <View style={{ gap: 6 }}>
-      <Small>{label}</Small>
-      <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-        {options.map((o) => (
-          <Text
-            key={o.value}
-            onPress={() => { tap(); onChange(o.value); }}
-            style={{
-              minWidth: 42, textAlign: 'center', paddingVertical: 11, paddingHorizontal: 10, borderRadius: radius.md, overflow: 'hidden',
-              backgroundColor: o.value === value ? palette.ink : palette.cardSunk,
-              color: o.value === value ? palette.paper : palette.inkSoft,
-              ...type.bodyMed,
-            }}
-          >
-            {o.label}
-          </Text>
-        ))}
-      </ScrollView>
-    </View>
-  );
-}
-
-/** Day / month / year pickers for an exact birth date — three scrollable wheels, no native date picker needed. */
-function DateWheels({
-  day, month, year, maxDay, minYear, maxYear, onChangeDay, onChangeMonth, onChangeYear,
-}: {
-  day: number; month: number; year: number; maxDay: number; minYear: number; maxYear: number;
-  onChangeDay: (v: number) => void; onChangeMonth: (v: number) => void; onChangeYear: (v: number) => void;
-}) {
-  const days = Array.from({ length: maxDay }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
-  const months = MONTHS.map((m, i) => ({ value: i, label: m.slice(0, 3) }));
-  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => ({ value: minYear + i, label: String(minYear + i) })).reverse();
-  return (
-    <View style={{ gap: 14 }}>
-      <Wheel label="Day" options={days} value={day} onChange={onChangeDay} />
-      <Wheel label="Month" options={months} value={month} onChange={onChangeMonth} />
-      <Wheel label="Year" options={years} value={year} onChange={onChangeYear} />
-    </View>
+    <Card style={{ alignItems: 'center', gap: 8, backgroundColor: palette.cardSunk }}>
+      <Dot stage="egg1" size={80} />
+      <Small style={{ textAlign: 'center' }}>{text}</Small>
+    </Card>
   );
 }
