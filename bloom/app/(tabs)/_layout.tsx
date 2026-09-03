@@ -11,7 +11,6 @@ const TABS = [
   { name: 'home', label: 'Home', glyph: '🏠' },
   { name: 'journey', label: 'Journey', glyph: '🐣' },
   { name: 'insights', label: 'Insights', glyph: '📊' },
-  { name: 'plan', label: 'Plan', glyph: '🗓️' },
   { name: 'photos', label: 'Photos', glyph: '📸' },
 ];
 
