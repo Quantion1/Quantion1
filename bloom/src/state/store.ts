@@ -2,203 +2,241 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { logTypeConfig } from '@/domain/logTypes';
+import { starterTiles } from '@/domain/trackers';
 import type {
-  Entry,
-  EntryDraft,
-  Gamification,
-  LogType,
-  Mode,
-  Profile,
-  Settings,
-  Subscription,
+  Entry, Memory, PlanItem, Profile, Progress, Settings, Stage, Subscription, Tile, TrackerKey,
 } from '@/domain/types';
-import { daysBetween, todayKey, toDayKey } from '@/lib/date';
+import { todayKey } from '@/lib/date';
 
-export interface XpEvent {
-  amount: number;
-  label: string;
+export interface Toast {
+  emoji: string;
+  title: string;
+  sub?: string;
   at: number;
-  levelUp?: number;
-  badges?: string[];
+  /** A level-up gets the full celebration sheet rather than a passing toast. */
+  big?: boolean;
 }
 
 interface State {
   profile: Profile;
   settings: Settings;
-  game: Gamification;
+  progress: Progress;
   sub: Subscription;
   entries: Entry[];
-  /** Transient — drives the celebration toast. Not persisted. */
-  lastXpEvent?: XpEvent;
+  tiles: Tile[];
+  plans: PlanItem[];
+  memories: Memory[];
+  toast?: Toast;
 
-  addEntry: (draft: EntryDraft & { at?: string }) => Entry;
+  addEntry: (draft: Omit<Entry, 'id' | 'createdAt'>) => Entry;
   updateEntry: (id: string, patch: Partial<Entry>) => void;
   deleteEntry: (id: string) => void;
 
   setProfile: (patch: Partial<Profile>) => void;
   setSettings: (patch: Partial<Settings>) => void;
-  switchMode: (mode: Mode) => void;
 
-  claimQuest: (questId: string, xp: number, gems: number) => void;
-  spendFreeze: () => boolean;
+  setTiles: (tiles: Tile[]) => void;
+  addTile: (key: TrackerKey) => void;
+  removeTile: (key: string) => void;
+  resizeTile: (key: string) => void;
+  moveTile: (key: string, delta: number) => void;
+
+  claimLevel: (id: string, title: string, emoji: string) => void;
+  snoozeLevel: (id: string) => void;
+  hatch: (birthDate: string, babyName: string) => void;
+
+  collectCard: (week: number) => void;
+  setPack: (id: string) => void;
+  mark: (key: string, date?: string) => void;
+  unmark: (key: string) => void;
   awardBadges: (ids: string[]) => void;
-  clearXpEvent: () => void;
+  noteOpened: () => void;
+
+  addPlan: (item: Omit<PlanItem, 'id'>) => void;
+  updatePlan: (id: string, patch: Partial<PlanItem>) => void;
+  deletePlan: (id: string) => void;
+
+  addMemory: (m: Omit<Memory, 'id'>) => void;
+  deleteMemory: (id: string) => void;
+
+  showToast: (t: Omit<Toast, 'at'>) => void;
+  clearToast: () => void;
 
   setPremium: (plan: Subscription['plan']) => void;
   cancelPremium: () => void;
 
-  seedDemo: (mode: Mode) => void;
+  seedDemo: (stage: Stage) => void;
   resetAll: () => void;
 }
 
-const emptyProfile: Profile = { parentName: '', mode: 'pregnancy', onboarded: false };
+const emptyProfile: Profile = {
+  parentName: '',
+  babyName: '',
+  stage: 'pregnancy',
+  country: 'NL',
+  onboarded: false,
+};
 
 const defaultSettings: Settings = {
   units: 'metric',
   clock24h: true,
-  dailyGoalXp: 30,
-  remindersOn: true,
+  reviewHour: 21,
+  drinks: ['glass', 'mug', 'bottle'],
 };
 
-const emptyGame: Gamification = {
-  xp: 0,
-  gems: 20,
-  streak: 0,
-  longestStreak: 0,
-  streakFreezes: 1,
-  freezeDaysUsed: [],
-  unlockedBadges: [],
-  xpByDay: {},
-  claimedQuests: {},
+const emptyProgress: Progress = {
+  pregnancyLevel: 0,
+  babyLevel: 0,
+  claimed: [],
+  snoozed: {},
+  badges: [],
+  daysOpened: [],
+  cards: [],
+  activePack: 'garden',
+  marks: {},
+  hatched: false,
 };
 
 const uid = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-
-function bumpStreak(game: Gamification, day: string): Gamification {
-  if (game.lastActiveDay === day) return game;
-  let streak = game.streak;
-  let freezes = game.streakFreezes;
-  const freezeDaysUsed = [...game.freezeDaysUsed];
-
-  if (!game.lastActiveDay) {
-    streak = 1;
-  } else {
-    const gap = daysBetween(game.lastActiveDay, day);
-    if (gap === 1) {
-      streak += 1;
-    } else if (gap === 2 && freezes > 0) {
-      // One missed day, covered by a freeze — the streak survives.
-      freezes -= 1;
-      freezeDaysUsed.push(toDayKey(new Date(new Date(day).getTime() - 86_400_000)));
-      streak += 1;
-    } else {
-      streak = 1;
-    }
-  }
-
-  return {
-    ...game,
-    streak,
-    streakFreezes: freezes,
-    freezeDaysUsed,
-    longestStreak: Math.max(game.longestStreak, streak),
-    lastActiveDay: day,
-  };
-}
 
 export const useStore = create<State>()(
   persist(
     (set, get) => ({
       profile: emptyProfile,
       settings: defaultSettings,
-      game: emptyGame,
+      progress: emptyProgress,
       sub: { premium: false },
       entries: [],
+      tiles: [],
+      plans: [],
+      memories: [],
 
       addEntry: (draft) => {
-        const at = draft.at ?? new Date().toISOString();
-        const entry = { ...draft, at, id: uid(), createdAt: new Date().toISOString() } as Entry;
-        const cfg = logTypeConfig(entry.type as LogType);
-        const day = todayKey();
-
-        set((s) => {
-          const game = bumpStreak(s.game, day);
-          const xpByDay = { ...game.xpByDay, [day]: (game.xpByDay[day] ?? 0) + cfg.xp };
-          return {
-            entries: [entry, ...s.entries],
-            game: { ...game, xp: game.xp + cfg.xp, xpByDay },
-            lastXpEvent: { amount: cfg.xp, label: cfg.label, at: Date.now() },
-          };
-        });
+        const entry: Entry = { ...draft, id: uid(), createdAt: new Date().toISOString() };
+        set((s) => ({ entries: [entry, ...s.entries] }));
         return entry;
       },
 
       updateEntry: (id, patch) =>
-        set((s) => ({
-          entries: s.entries.map((e) => (e.id === id ? ({ ...e, ...patch } as Entry) : e)),
-        })),
+        set((s) => ({ entries: s.entries.map((e) => (e.id === id ? { ...e, ...patch } : e)) })),
 
       deleteEntry: (id) => set((s) => ({ entries: s.entries.filter((e) => e.id !== id) })),
 
       setProfile: (patch) => set((s) => ({ profile: { ...s.profile, ...patch } })),
       setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 
-      switchMode: (mode) => set((s) => ({ profile: { ...s.profile, mode } })),
+      setTiles: (tiles) => set({ tiles }),
 
-      claimQuest: (questId, xp, gems) => {
-        const day = todayKey();
-        const key = `${day}:${questId}`;
-        if (get().game.claimedQuests[key]) return;
+      addTile: (key) =>
+        set((s) => (s.tiles.some((t) => t.key === key) ? {} : { tiles: [...s.tiles, { key, span: 1 }] })),
+
+      removeTile: (key) => set((s) => ({ tiles: s.tiles.filter((t) => t.key !== key) })),
+
+      resizeTile: (key) =>
+        set((s) => ({
+          tiles: s.tiles.map((t) => (t.key === key ? { ...t, span: t.span === 1 ? 2 : 1 } : t)),
+        })),
+
+      moveTile: (key, delta) =>
         set((s) => {
-          const game = bumpStreak(s.game, day);
-          return {
-            game: {
-              ...game,
-              xp: game.xp + xp,
-              gems: game.gems + gems,
-              xpByDay: { ...game.xpByDay, [day]: (game.xpByDay[day] ?? 0) + xp },
-              claimedQuests: { ...game.claimedQuests, [key]: day },
-            },
-            lastXpEvent: { amount: xp, label: 'Quest complete', at: Date.now() },
-          };
-        });
-      },
+          const i = s.tiles.findIndex((t) => t.key === key);
+          const j = i + delta;
+          if (i < 0 || j < 0 || j >= s.tiles.length) return {};
+          const next = [...s.tiles];
+          [next[i], next[j]] = [next[j], next[i]];
+          return { tiles: next };
+        }),
 
-      spendFreeze: () => {
-        const { game } = get();
-        if (game.streakFreezes <= 0) return false;
-        set({ game: { ...game, streakFreezes: game.streakFreezes - 1 } });
-        return true;
-      },
-
-      awardBadges: (ids) =>
+      claimLevel: (id, title, emoji) =>
         set((s) => {
-          const fresh = ids.filter((id) => !s.game.unlockedBadges.includes(id));
-          if (!fresh.length) return {};
+          if (s.progress.claimed.includes(id)) return {};
+          const claimed = [...s.progress.claimed, id];
+          const isPregnancy = id.startsWith('p_');
           return {
-            game: {
-              ...s.game,
-              unlockedBadges: [...s.game.unlockedBadges, ...fresh],
-              gems: s.game.gems + fresh.length * 10,
+            progress: {
+              ...s.progress,
+              claimed,
+              pregnancyLevel: isPregnancy ? s.progress.pregnancyLevel + 1 : s.progress.pregnancyLevel,
+              babyLevel: isPregnancy ? s.progress.babyLevel : s.progress.babyLevel + 1,
             },
-            lastXpEvent: { amount: 0, label: 'Badge unlocked', at: Date.now(), badges: fresh },
+            toast: { emoji, title, sub: 'Level up', at: Date.now(), big: true },
           };
         }),
 
-      clearXpEvent: () => set({ lastXpEvent: undefined }),
+      snoozeLevel: (id) =>
+        set((s) => ({ progress: { ...s.progress, snoozed: { ...s.progress.snoozed, [id]: todayKey() } } })),
+
+      hatch: (birthDate, babyName) =>
+        set((s) => ({
+          profile: { ...s.profile, stage: 'baby', birthDate, babyName: babyName || s.profile.babyName },
+          progress: { ...s.progress, hatched: true, claimed: [...s.progress.claimed, 'b_home'], babyLevel: 1 },
+          tiles: starterTiles('baby').map((key) => ({ key, span: 1 as const })),
+          toast: { emoji: '🐣', title: 'Dot hatched', sub: 'Player two has entered', at: Date.now(), big: true },
+        })),
+
+      collectCard: (week) =>
+        set((s) =>
+          s.progress.cards.includes(week)
+            ? {}
+            : {
+                progress: { ...s.progress, cards: [...s.progress.cards, week] },
+                toast: { emoji: '🃏', title: `Week ${week} card collected`, at: Date.now() },
+              },
+        ),
+
+      setPack: (id) => set((s) => ({ progress: { ...s.progress, activePack: id } })),
+
+      mark: (key, date) =>
+        set((s) => ({ progress: { ...s.progress, marks: { ...s.progress.marks, [key]: date ?? todayKey() } } })),
+
+      unmark: (key) =>
+        set((s) => {
+          const marks = { ...s.progress.marks };
+          delete marks[key];
+          return { progress: { ...s.progress, marks } };
+        }),
+
+      awardBadges: (ids) =>
+        set((s) => {
+          const fresh = ids.filter((id) => !s.progress.badges.includes(id));
+          if (!fresh.length) return {};
+          return {
+            progress: { ...s.progress, badges: [...s.progress.badges, ...fresh] },
+            toast: { emoji: '🏅', title: 'Badge earned', at: Date.now() },
+          };
+        }),
+
+      noteOpened: () =>
+        set((s) => {
+          const day = todayKey();
+          if (s.progress.daysOpened.includes(day)) return {};
+          return { progress: { ...s.progress, daysOpened: [...s.progress.daysOpened, day] } };
+        }),
+
+      addPlan: (item) => set((s) => ({ plans: [...s.plans, { ...item, id: uid() }] })),
+      updatePlan: (id, patch) =>
+        set((s) => ({ plans: s.plans.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
+      deletePlan: (id) => set((s) => ({ plans: s.plans.filter((p) => p.id !== id) })),
+
+      addMemory: (m) => set((s) => ({ memories: [{ ...m, id: uid() }, ...s.memories] })),
+      deleteMemory: (id) => set((s) => ({ memories: s.memories.filter((m) => m.id !== id) })),
+
+      showToast: (t) => set({ toast: { ...t, at: Date.now() } }),
+      clearToast: () => set({ toast: undefined }),
 
       setPremium: (plan) => set({ sub: { premium: true, plan, since: new Date().toISOString() } }),
       cancelPremium: () => set({ sub: { premium: false } }),
 
-      seedDemo: (mode) => {
-        // Imported lazily to keep the generator out of the startup path.
-        const { buildDemoData } = require('@/state/demo') as typeof import('@/state/demo');
-        const demo = buildDemoData(mode);
+      seedDemo: (stage) => {
+        const { buildDemo } = require('@/state/demo') as typeof import('@/state/demo');
+        const demo = buildDemo(stage);
         set({
           profile: { ...demo.profile, onboarded: true },
           entries: demo.entries,
-          game: demo.game,
+          progress: demo.progress,
+          tiles: demo.tiles,
+          plans: demo.plans,
+          memories: demo.memories,
           sub: { premium: false },
         });
       },
@@ -207,21 +245,27 @@ export const useStore = create<State>()(
         set({
           profile: emptyProfile,
           settings: defaultSettings,
-          game: emptyGame,
+          progress: emptyProgress,
           sub: { premium: false },
           entries: [],
-          lastXpEvent: undefined,
+          tiles: [],
+          plans: [],
+          memories: [],
+          toast: undefined,
         }),
     }),
     {
-      name: 'bloom-store-v1',
+      name: 'nest-store-v1',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({
         profile: s.profile,
         settings: s.settings,
-        game: s.game,
+        progress: s.progress,
         sub: s.sub,
         entries: s.entries,
+        tiles: s.tiles,
+        plans: s.plans,
+        memories: s.memories,
       }),
     },
   ),
@@ -229,6 +273,6 @@ export const useStore = create<State>()(
 
 export const useProfile = () => useStore((s) => s.profile);
 export const useSettings = () => useStore((s) => s.settings);
-export const useGame = () => useStore((s) => s.game);
+export const useProgress = () => useStore((s) => s.progress);
 export const useEntries = () => useStore((s) => s.entries);
 export const usePremium = () => useStore((s) => s.sub.premium);

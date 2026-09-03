@@ -1,216 +1,228 @@
-# 🌱 Bloom — pregnancy & newborn tracker
+# 🥚 Nest — pregnancy and newborn tracker
 
-A cross-platform (iOS + Android + web) prototype for tracking and analysing everything
-around pregnancy and the first year, built with the retention mechanics of Duolingo:
-streaks, XP, daily goals, quests, badges, a mascot, and a chunky, tappable design system.
+A cross-platform (iOS + Android + web) prototype for tracking pregnancy and the first year,
+built around a companion called **Dot** who starts as an egg and grows only when something
+real happens to your baby.
 
-Built with **React Native + Expo (SDK 57) + TypeScript**. One codebase, both stores from
-day one.
+React Native + Expo SDK 57 + TypeScript. One codebase, both stores.
+
+> This replaces the earlier *Bloom* prototype in this same folder. Bloom's analytics engine
+> and chart primitives survive; its Duolingo-derived design system, XP economy, streaks and
+> mascot do not.
 
 ---
 
-## 1. Product decisions
+## 1. Where it came from
 
-| Decision | Choice |
+Nest is a deliberate merge of two prototypes.
+
+**From the v3 baby-tracker prototype** — the ideas worth keeping:
+- A **customisable tile home screen**: drag, resize, remove, add from a library.
+- A library that sorts by relevance — *suggested now / not yet / retired* — so the home
+  screen shrinks as well as grows. Teeth appear at three months; vitamin K retires at three
+  months. Neither needs a decision from the parent.
+- **Levels you claim** by confirming a real event, not by grinding XP.
+- A weekly **collectible card**, a **Plan** calendar, a country-specific **care pathway**,
+  **Memories + Firsts**, and a **daily review** computed only from real logs.
+- A whole **maternal side** — nobody else tracks the parent.
+- Dry, adult copy. It is the single thing that separates this from every other baby app.
+
+**From the earlier Bloom build** — the analysis:
+- Sleep raster, longest-stretch trend, feeding balance, interval histogram, weight against
+  the guideline band, and the hand-built SVG chart primitives that draw them.
+
+**New here** — Dot, the parchment design system, the logging-based badges, and the merge
+of claimed levels with a real analytics engine.
+
+---
+
+## 2. Decisions
+
+| | |
 | --- | --- |
 | Stack | React Native + Expo, TypeScript, Expo Router |
-| Scope | Full arc: pregnancy → birth → 12 months, in one app that switches mode at birth |
-| Data | Offline-first, on-device only (Zustand + AsyncStorage). No accounts, no server |
-| Gamification | Streaks + daily goal + freezes, XP/levels + daily quests, badges & milestone trophies (no leagues) |
-| Brand | Mascot-led, bright and playful — "Pip", a sprouting seed |
-| Locale | Metric + English, with a working metric/imperial switch |
-| Analytics focus | Sleep patterns, feeding volume & rhythm, pregnancy trends |
-| Monetisation | Generous free tier; premium = depth, analytics and history |
-
-Growth-percentile curves were not in the priority list, so growth is fully **logged** but the
-WHO comparison chart sits behind the paywall as a teaser rather than a headline feature.
+| Data | Offline-first, on-device only (Zustand + AsyncStorage) |
+| Mascot | Dot, hand-drawn SVG, nine poses: four egg states then five growth stages |
+| Palette | Warm parchment and earth; Dot's marigold is the only saturated colour |
+| Type | Fraunces for display, Nunito Sans for body and data |
+| Core loop | Claimed milestones — the app asks, you confirm |
+| Streaks | None. A seven-day rhythm strip with no loss state |
+| Collectibles | Weekly size cards (fruit free, object packs premium) + logging badges |
+| Voice | Dry and witty |
+| Navigation | Home · Journey · Insights · Plan · Photos |
+| Care pathway | Netherlands first, with a working country switcher |
 
 ---
 
-## 2. Running it
+## 3. Running it
 
 ```bash
 cd bloom
 npm install
-npm start          # then scan the QR with Expo Go, or press i / a / w
+npm start          # scan the QR with Expo Go, or press i / a / w
 ```
 
-`npm run ios`, `npm run android`, `npm run web` open a platform directly.
-`npm run typecheck` runs `tsc --noEmit` (currently clean).
+`npm run typecheck` runs `tsc --noEmit` (clean). No keys, no backend, no accounts.
 
-No API keys, no backend, no accounts — it runs offline the moment it installs.
-
-**Fastest way to see it:** in onboarding, tap **Explore with demo data**. That seeds 60 days
-of realistic, deterministic history (≈700 entries) so every chart, streak and badge has
-something real to show. You can reload or switch the demo mode any time from **Me → Your data**.
+In onboarding, **Fill it with sixty days of demo data** seeds a deterministic history so
+every chart and card has something real in it. Reload or switch mode any time from
+**Settings → Your data**.
 
 ---
 
-## 3. The five screens
+## 4. Dot
 
-| Tab | What it does |
-| --- | --- |
-| **Today** | Mascot + stage hero ("Week 24 · size of a corn cob"), daily-goal ring, 7-day streak strip, level bar, quick-log grid, three daily quests, today's numbers, recent activity |
-| **Track** | Every log type as a big card with "last logged" state; the pregnancy→newborn switch lives here too |
-| **Insights** | The analysis surface: plain-language read-outs plus charts, with premium gates on the deeper ones |
-| **Journey** | Duolingo-style vertical path — weeks 4→40 or months 0→12 — with checkpoint chests and a badge shelf |
-| **Me** | Level & stats, subscription, units/goal/clock preferences, dates, mode switch, demo data, reset |
+Dot is the progress bar, and she is the only one.
 
-Modal routes: `log/[type]` (one screen per log type), `stage/[index]` (week/month detail),
-`paywall`, `streak`, `history`.
+During pregnancy she is an egg that cracks once per trimester — `egg0` through `egg3`.
+Cracking the egg is the one irreversible action in the app, so it asks properly. After she
+hatches, her pose follows the claimed baby level: asleep in the blanket → up on her elbows →
+sitting up and waving → standing → walking. The three poses you supplied became the first
+three; standing and walking extend the ladder.
 
----
-
-## 4. What you can track
-
-**Pregnancy** — symptoms & mood check-in, maternal weight, kick counter (tap-to-10 with a
-live timer), contraction timer (with a 5-1-1 pattern read-out), appointments.
-
-**Newborn → 12 months** — feeds (left/right breast with a live timer, bottle in ml/oz,
-solids), sleep (nap/night, duration, wakings), diapers, growth (weight/length/head),
-daily mood & health tags, milestones, appointments.
-
-Every entry can carry a note and be back-dated (Now / 15m / 30m / 1h / 2h ago).
+She is drawn as vector, not bitmap: one shared head and body with pose-specific wings, feet
+and props, so a new stage is a few paths rather than a new asset. She idles with a slow bob
+and settles more slowly when asleep.
 
 ---
 
-## 5. Analysis
+## 5. The core loop
 
-Read-outs are generated from the parent's own data in `src/analytics/index.ts` and rendered
-with hand-built SVG charts in `src/charts/index.tsx` (no chart library — full control over
-the visual language, small bundle).
+**Levels are claimed, never earned.** The app watches for the moment something plausibly
+happened — day 90 arrives, or a sleep entry crosses six hours — and asks one plain question:
 
-**Newborn**
-- Sleep per day, night stacked with naps
-- 24-hour sleep raster — one row per day, showing exactly where sleep landed *(premium)*
-- Longest-stretch trend line *(premium)*
-- Feeds per day; bottle volume per day *(premium)*
-- Left/right balance, day-vs-night split donut, gap-between-feeds histogram *(premium)*
-- Weight against a WHO reference band *(premium)*
+> **Back to birth weight** · Back to birth weight at the last weigh-in?
+> *Not yet* / *Yes — level up*
 
-**Pregnancy**
-- Weight gain against the IOM guideline band for a normal starting BMI
-- Kick sessions — minutes to reach 10 movements, with slow sessions highlighted
-- Symptom heatmap by gestational week *(premium)*
-- Mood against symptom severity *(premium)*
+"Not yet" hides it until tomorrow and costs nothing. Only one question is ever live, and the
+ladder is walked in order, so the app never nags on six fronts at once. Nothing you log can
+advance a level by itself, which means the progression cannot be gamed and does not reward
+logging noise.
 
-Every insight is descriptive — it reports what was logged and how it compares to published
-typical ranges. The app states plainly that it is not medical advice.
+Ten pregnancy levels, topping out at week 37 so an early arrival can still max the track.
+Fourteen baby levels to first steps.
 
----
+**Badges are the opposite** — they are about you, not the baby. Opening the app on thirty
+different days, logging at 3am, a hundred nappies, five hundred hours of sleep tracked,
+covering one whole day across all four quarters. Twenty-seven of them, in four groups, no
+rarity and nothing purchasable.
 
-## 6. Gamification
-
-**XP** is earned per entry: diaper 3, feed 5, sleep 6, mood 8, contraction 8, symptom 10,
-weight 10, appointment 10, kicks 12, growth 15, milestone 25. Quests pay 15–30 XP plus gems.
-
-**Levels** use a widening curve (`levelForXp`): 100 XP for level 2, then `60 + 40n`. Titles
-run Seedling → Sprout → Bud → Bloom → … → Legend Parent.
-
-**Daily goal** — Casual 20 / Regular 30 / Serious 50 / Intense 80 XP. Hitting it keeps the
-streak; the Today ring and the 7-day flame strip make the state obvious at a glance.
-
-**Streaks** advance once per day. Miss a day and an equipped ❄️ freeze is spent
-automatically (`bumpStreak` in `src/state/store.ts`) — the day shows as frozen rather than
-broken. Freezes cost 60 gems; premium keeps you stocked.
-
-**Quests** — three per day, chosen deterministically from the day key so they are stable
-until midnight and never reshuffle mid-session. Pool is mode-aware
-(`src/domain/quests.ts`).
-
-**Badges** — 18 definitions, each a predicate over your history with live progress
-(`src/domain/badges.ts`). They award automatically via `useBadgeSync`.
-
-Why no leagues: ranking parents against each other on baby data is the one Duolingo
-mechanic that reads as hostile in this context. Everything else transfers cleanly.
+**Rhythm, not streaks.** Seven dots, filled or not. It never breaks, there is no freeze to
+buy and nothing to lose. A hospital stay or a rough week should not cost you anything in a
+baby app.
 
 ---
 
-## 7. Freemium model
+## 6. Tracking
 
-Core logging is free forever — you should never lose access to your own records. Premium
-sells **depth**, not the ability to record.
+Twenty-nine trackers across four groups, each declaring its own sheet:
+
+- **Baby** — sleep, breastfeed, bottle, diaper, weight, tummy time, temperature, vitamin D,
+  vitamin K, solids, new food, teeth, words, vaccinations, baby's medicine.
+- **You** — pumping, my sleep, water, supplements, my medication.
+- **Pregnancy** — kick counter, contractions, bump photo, midwife questions.
+- **Birth** — labour timeline, birth record.
+- **Keepsake** — memories, note.
+
+One `Entry` shape covers all of them; what a sheet shows is declared as data
+(`src/domain/trackers.ts`), so a new tracker is a registry entry, not a new form. Sixteen
+block types are implemented: timer, time pair, number, pick, chips, faces, text, checks,
+counter, confirm, sides, drinks, teeth, events, text list and photo.
+
+Tummy time is one tap that counts. Water logs by vessel. Diapers log instantly from the
+pick. Sleep, feeds and contractions offer *time it* or *type it*.
+
+---
+
+## 7. Analysis
+
+Read-outs and charts are pure functions of the entry log (`src/analytics/`), and a fresh
+install shows empty states rather than sample data.
+
+**Newborn** — sleep per day (night stacked with naps), the 24-hour raster, longest-stretch
+trend, feeds per day, left/right balance, day-versus-night split, gap-between-feeds
+histogram, weight against the WHO band.
+
+**Pregnancy** — weight gain against the IOM guideline band, kick-session consistency
+(minutes to reach ten), contraction length and interval with the 5-1-1 read-out, and your
+own sleep.
+
+**The daily review** adds the part charts cannot: a 24-hour rhythm strip with feed and change
+marks, the numbers with typical ranges beside them, patterns it noticed against the previous
+seven days, and what it would try tomorrow. A day still in progress withholds its
+comparisons and says so — half a day measured against seven whole ones would only mislead.
+
+---
+
+## 8. Free and premium
+
+Logging is free forever. Premium sells depth, never access to your own records.
 
 | | Free | Premium |
 | --- | --- | --- |
-| All logging, streaks, XP, quests, badges | ✓ | ✓ |
-| Journey content | Current stage | All 40 weeks + 12 months |
-| History | Last 7 days | Unlimited |
-| Analytics range | 7 days | 30 / 90 days |
-| Read-outs | First 2 | All |
-| Sleep raster, stretch trends | — | ✓ |
-| Feeding balance & interval analysis | — | ✓ |
-| Growth vs WHO curves | — | ✓ |
-| PDF / CSV export | — | ✓ |
-| Multi-caregiver sharing | — | ✓ |
-| Streak freezes | 1 / month | Unlimited |
+| Every tracker, unlimited logs | ✓ | ✓ |
+| Levels, badges, Dot | All | All |
+| Weekly cards | The Veg Aisle | Every pack |
+| Insights range | 7 days | 30 · 90 days |
+| Read-outs | First two | All |
+| Sleep raster, stretch trend | — | ✓ |
+| Feeding balance and intervals | — | ✓ |
+| Weight against the WHO band | — | ✓ |
+| Daily review | ✓ | ✓ |
+| Photos | 12 | Unlimited |
+| PDF and CSV export | — | ✓ |
+| A second carer on the same baby | — | ✓ |
 
-Plans: €7.99/mo · €49.99/yr (7-day trial, "SAVE 48%", pre-selected) · €99 lifetime.
-
-Gating is implemented, not mocked: `<PremiumGate>` renders the *real* chart underneath a
-dimmed scrim so the value is visible but unreadable, which converts far better than an
-empty lock box. Tapping **Unlock** in the prototype flips the flag locally — no payment is
-taken. Production wires the same flag to App Store / Play Billing via RevenueCat.
+€6.99/mo · €44.99/yr (14 days free) · €89 once. Gating is real: `<PremiumGate>` renders the
+actual chart underneath a dimmed scrim, so the value is visible but unreadable.
 
 ---
 
-## 8. Architecture
+## 9. Architecture
 
 ```
 bloom/
-├── app/                      # Expo Router file-based routes
-│   ├── _layout.tsx           # providers, store hydration gate, XP toast
-│   ├── onboarding.tsx        # 4-step setup, incl. demo-data entry point
-│   ├── (tabs)/               # today · track · insights · journey · me
-│   ├── log/[type].tsx        # one form per log type + kick & contraction timers
-│   ├── stage/[index].tsx     # week / month detail
-│   ├── paywall.tsx  streak.tsx  history.tsx
+├── app/                    # Expo Router
+│   ├── _layout.tsx         # fonts, hydration gate, toast
+│   ├── onboarding.tsx
+│   ├── (tabs)/             # home · journey · insights · plan · photos
+│   ├── log/[key].tsx       # the data-driven sheet, 16 block types
+│   ├── library.tsx         # tile library, sorted by relevance
+│   ├── review.tsx  hatch.tsx  paywall.tsx  settings.tsx  history.tsx
 ├── src/
-│   ├── theme/                # palette, radii, slab shadows, type scale
-│   ├── components/           # Button3D, Card, Chip, Stepper, Mascot, rings, gates…
-│   ├── charts/               # BarChart, LineChart, SleepRaster, Donut, Heatmap
-│   ├── domain/               # types, pregnancy weeks, baby months, quests, badges, levels
-│   ├── analytics/            # pure selectors over entries → chart data + read-outs
-│   ├── state/                # Zustand store, persistence, hooks, demo generator
-│   └── lib/                  # date and unit helpers
+│   ├── theme/              # parchment tokens, type scale
+│   ├── components/         # Dot, Tile, LevelPrompt, CardFace, Rhythm, ui
+│   ├── charts/             # BarChart, LineChart, SleepRaster, DayRhythm, Donut
+│   ├── domain/             # trackers, levels, badges, cards, care, describe
+│   ├── analytics/          # selectors + the daily review
+│   ├── state/              # store, hooks, demo generator
+│   └── lib/                # dates, units
 ```
 
-The store is the only stateful layer; analytics are pure functions of `entries`, which is
-what makes the demo generator and the charts trivially testable. Swapping AsyncStorage for
-a synced backend later means replacing one `persist` adapter and adding a sync queue —
-nothing in the UI needs to know.
-
-### Design system
-
-Duolingo's signature control is a flat slab with a darker bottom edge that collapses on
-press — that is `Button3D`, animated with the native driver. Around it: 22–30px radii,
-900-weight numerals, saturated accents on soft tinted backgrounds, and one accent colour
-per domain (feeds = sky, sleep = grape, diapers = mint, growth = coral, pregnancy =
-blossom, premium = grape→blossom gradient). Pip is hand-drawn SVG with six moods
-(happy, cheer, sleepy, wave, sad, proud) and a gentle idle bob.
+The store is the only stateful layer. Analytics are pure over `entries`, which is what makes
+the demo generator and the charts trivially testable, and what would make a synced backend a
+persistence swap rather than a rewrite.
 
 ---
 
-## 9. Prototype boundaries
+## 10. Not built yet
 
-Deliberately not built yet, in rough priority order:
-
-1. **Payments** — RevenueCat + App Store / Play Billing behind the existing `sub` flag.
-2. **Backend & sync** — accounts, multi-caregiver sharing, cross-device backup.
-3. **Notifications** — `expo-notifications` for the streak-at-risk nudge and feed reminders.
-4. **PDF/CSV export** — the buttons are in place; wiring is `expo-print` + `expo-sharing`.
-5. **Real WHO/CDC tables** — the current growth band is a simplified ±12% around the WHO
-   median. Production needs the full LMS tables for true percentiles.
-6. **Date pickers** — dates are typed as `YYYY-MM-DD` or set with a chunky week scale;
-   `@react-native-community/datetimepicker` is the drop-in.
-7. **i18n** — copy is inline English. Dutch was the obvious second locale.
-8. **Widgets & watch** — a lock-screen "last feed / next nap" widget is the highest-value
-   retention surface after notifications.
+1. **Payments** — RevenueCat behind the existing `sub` flag.
+2. **Camera and real photos** — memories use emoji stand-ins; storage is scoped but unwired.
+3. **Backend and sync** — accounts, the second carer, cross-device backup.
+4. **Notifications** — the gentle kind. Never a red badge.
+5. **PDF/CSV export** — buttons exist; `expo-print` + `expo-sharing` is the wiring.
+6. **Real WHO LMS tables** — the current band is ±12% around the WHO median, not true
+   percentiles. This needs the full tables before anyone reads it clinically.
+7. **Night mode** — the tokens are centralised for it; a 3am palette is the obvious next win.
+8. **Date pickers** — dates are typed as `YYYY-MM-DD` or set on a chunky week scale.
+9. **Dutch copy** — everything is inline English right now.
+10. **Care pathways beyond NL** — BE, UK, DE and US are carried over and need a local check.
 
 ---
 
-## 10. Safety note
+## 11. Safety
 
-Bloom is a tracking and reflection tool. It does not diagnose, and every "typical range"
-shown is a published population reference, not a target. The app says so on the profile
-screen and next to the insights.
+Nest keeps records and shows you patterns in them. It does not diagnose, and every "typical
+range" it shows is a published population figure, not a target. Anything that worries you
+goes to your midwife, doctor or consultatiebureau.

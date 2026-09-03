@@ -2,10 +2,7 @@ export const DAY_MS = 86_400_000;
 
 export function toDayKey(d: Date | string): string {
   const date = typeof d === 'string' ? new Date(d) : d;
-  const y = date.getFullYear();
-  const m = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  return `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}-${`${date.getDate()}`.padStart(2, '0')}`;
 }
 
 export function fromDayKey(key: string): Date {
@@ -13,13 +10,9 @@ export function fromDayKey(key: string): Date {
   return new Date(y, m - 1, d);
 }
 
-export function todayKey(): string {
-  return toDayKey(new Date());
-}
+export const todayKey = () => toDayKey(new Date());
 
-export function startOfDay(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
+export const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
 export function addDays(d: Date, n: number): Date {
   const c = new Date(d);
@@ -33,21 +26,17 @@ export function daysBetween(a: Date | string, b: Date | string): number {
   return Math.round((e - s) / DAY_MS);
 }
 
-/** Inclusive list of day keys ending today. */
 export function lastNDayKeys(n: number, end = new Date()): string[] {
   const keys: string[] = [];
   for (let i = n - 1; i >= 0; i--) keys.push(toDayKey(addDays(end, -i)));
   return keys;
 }
 
-export function formatTime(iso: string, clock24h: boolean): string {
+export function formatTime(iso: string, clock24h = true): string {
   const d = new Date(iso);
-  if (clock24h) {
-    return `${`${d.getHours()}`.padStart(2, '0')}:${`${d.getMinutes()}`.padStart(2, '0')}`;
-  }
+  if (clock24h) return `${`${d.getHours()}`.padStart(2, '0')}:${`${d.getMinutes()}`.padStart(2, '0')}`;
   const h = d.getHours() % 12 || 12;
-  const suffix = d.getHours() < 12 ? 'am' : 'pm';
-  return `${h}:${`${d.getMinutes()}`.padStart(2, '0')}${suffix}`;
+  return `${h}:${`${d.getMinutes()}`.padStart(2, '0')}${d.getHours() < 12 ? 'am' : 'pm'}`;
 }
 
 export function formatRelative(iso: string): string {
@@ -78,3 +67,4 @@ export function formatDuration(minutes: number): string {
 }
 
 export const WEEKDAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

@@ -4,14 +4,14 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { tap } from '@/components/ui';
-import { palette, radius } from '@/theme';
+import { palette, type } from '@/theme';
 
 const TABS = [
-  { name: 'today', label: 'Today', emoji: '🏡', color: palette.blossom, soft: palette.blossomSoft },
-  { name: 'track', label: 'Track', emoji: '➕', color: palette.mint, soft: palette.mintSoft },
-  { name: 'insights', label: 'Insights', emoji: '📊', color: palette.sky, soft: palette.skySoft },
-  { name: 'journey', label: 'Journey', emoji: '🗺️', color: palette.sunny, soft: palette.sunnySoft },
-  { name: 'me', label: 'Me', emoji: '🙋', color: palette.grape, soft: palette.grapeSoft },
+  { name: 'home', label: 'Home', glyph: '🏠' },
+  { name: 'journey', label: 'Journey', glyph: '🐣' },
+  { name: 'insights', label: 'Insights', glyph: '📊' },
+  { name: 'plan', label: 'Plan', glyph: '🗓️' },
+  { name: 'photos', label: 'Photos', glyph: '📸' },
 ];
 
 export default function TabsLayout() {
@@ -19,17 +19,16 @@ export default function TabsLayout() {
 
   return (
     <Tabs
-      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: palette.bg } }}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: palette.paper } }}
       tabBar={({ state, navigation }) => (
         <View
           style={{
             flexDirection: 'row',
-            backgroundColor: palette.white,
-            borderTopWidth: 2,
+            backgroundColor: palette.card,
+            borderTopWidth: 1,
             borderTopColor: palette.line,
-            paddingTop: 8,
-            paddingBottom: Math.max(insets.bottom, 8),
-            paddingHorizontal: 6,
+            paddingTop: 9,
+            paddingBottom: Math.max(insets.bottom, 9),
           }}
         >
           {state.routes.map((route, i) => {
@@ -39,44 +38,21 @@ export default function TabsLayout() {
             return (
               <Pressable
                 key={route.key}
-                onPress={() => {
-                  tap();
-                  if (!focused) navigation.navigate(route.name);
-                }}
-                style={{ flex: 1, alignItems: 'center' }}
+                onPress={() => { tap(); if (!focused) navigation.navigate(route.name); }}
+                style={{ flex: 1, alignItems: 'center', gap: 3 }}
               >
-                <View
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 6,
-                    borderRadius: radius.md,
-                    backgroundColor: focused ? cfg.soft : 'transparent',
-                    borderWidth: 2,
-                    borderColor: focused ? cfg.color : 'transparent',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.45 }}>{cfg.emoji}</Text>
-                </View>
-                <Text
-                  style={{
-                    fontSize: 10,
-                    fontWeight: '900',
-                    marginTop: 3,
-                    color: focused ? cfg.color : palette.inkFaint,
-                  }}
-                >
-                  {cfg.label}
+                <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.42 }}>{cfg.glyph}</Text>
+                <Text style={{ ...type.label, fontSize: 9.5, color: focused ? palette.ink : palette.inkFaint }}>
+                  {cfg.label.toUpperCase()}
                 </Text>
+                <View style={{ height: 2, width: 16, borderRadius: 2, backgroundColor: focused ? palette.dot : 'transparent' }} />
               </Pressable>
             );
           })}
         </View>
       )}
     >
-      {TABS.map((t) => (
-        <Tabs.Screen key={t.name} name={t.name} />
-      ))}
+      {TABS.map((t) => <Tabs.Screen key={t.name} name={t.name} />)}
     </Tabs>
   );
 }

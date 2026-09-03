@@ -1,130 +1,97 @@
-export type Mode = 'pregnancy' | 'baby';
+import type { AccentName } from '@/theme';
 
-export type LogType =
-  // Baby
-  | 'feed'
-  | 'sleep'
-  | 'diaper'
-  | 'growth'
-  | 'babyMood'
-  | 'milestone'
-  // Pregnancy
-  | 'symptom'
-  | 'weight'
-  | 'kicks'
-  | 'contraction'
-  | 'appointment';
+export type Stage = 'pregnancy' | 'baby';
 
-export type FeedMethod = 'left' | 'right' | 'bottle' | 'solids';
+export type TrackerKey =
+  // baby
+  | 'sleep' | 'breast' | 'bottle' | 'diaper' | 'weight' | 'tummy' | 'temp'
+  | 'vitd' | 'vitk' | 'solids' | 'newfood' | 'teeth' | 'words' | 'vax' | 'bmed'
+  // you
+  | 'pump' | 'msleep' | 'water' | 'supp' | 'med'
+  // pregnancy
+  | 'kicks' | 'contr' | 'bump' | 'mwq'
+  // birth
+  | 'labour' | 'birthrec'
+  // utility
+  | 'memories' | 'note';
 
-export interface BaseEntry {
+/**
+ * One shape for every tracker. Which fields a tracker uses is declared by its
+ * sheet spec, so adding a tracker is data rather than a new form component.
+ */
+export interface Entry {
   id: string;
-  type: LogType;
-  /** ISO timestamp the event happened (not when it was typed in). */
+  tracker: TrackerKey;
+  /** When it happened. */
   at: string;
-  createdAt: string;
-  note?: string;
-}
-
-export interface FeedEntry extends BaseEntry {
-  type: 'feed';
-  method: FeedMethod;
-  /** Breast/nursing duration. */
+  /** For timed entries — sleep, feeds, contractions. */
+  end?: string;
   minutes?: number;
-  /** Bottle volume in millilitres (canonical unit; UI converts). */
-  ml?: number;
+  /** Primary number: ml, kg, °C, hours. */
+  amount?: number;
+  /** Secondary number: cm at birth. */
+  amount2?: number;
+  kind?: string;
+  side?: 'left' | 'right' | 'both';
+  chips?: string[];
+  /** 1–5 face rating. */
+  face?: number;
+  text?: string;
+  /** Tap counters — kicks, tummy time. */
+  count?: number;
+  checks?: string[];
+  note?: string;
+  createdAt: string;
 }
 
-export interface SleepEntry extends BaseEntry {
-  type: 'sleep';
-  /** Minutes asleep. `at` is the moment sleep started. */
-  minutes: number;
-  kind: 'night' | 'nap';
-  wakings?: number;
+export type BlockType =
+  | 'timer' | 'timepair' | 'number' | 'pick' | 'chips' | 'faces' | 'text'
+  | 'checks' | 'counter' | 'confirm' | 'sides' | 'drinks' | 'teeth'
+  | 'events' | 'textlist' | 'photo';
+
+export interface Block {
+  t: BlockType;
+  label?: string;
+  field?: string;
+  unit?: string;
+  step?: number;
+  def?: number | string;
+  presets?: number[];
+  opts?: (string | [string, string])[];
+  faces?: string[];
+  target?: number;
+  optional?: boolean;
+  instant?: boolean;
+  single?: boolean;
+  bedwake?: boolean;
+  ph?: string;
 }
 
-export interface DiaperEntry extends BaseEntry {
-  type: 'diaper';
-  kind: 'wet' | 'dirty' | 'mixed' | 'dry';
+export interface Tracker {
+  key: TrackerKey;
+  label: string;
+  emoji: string;
+  accent: AccentName;
+  group: 'Baby' | 'You' | 'Pregnancy' | 'Birth' | 'Keepsake';
+  stage: Stage | 'both';
+  /** Availability window. Pregnancy trackers use weeks, baby trackers use days. */
+  from?: number;
+  to?: number;
+  blurb: string;
+  blocks: Block[];
+  /** Shown on a fresh install. */
+  starter?: boolean;
 }
-
-export interface GrowthEntry extends BaseEntry {
-  type: 'growth';
-  weightKg?: number;
-  lengthCm?: number;
-  headCm?: number;
-}
-
-export interface BabyMoodEntry extends BaseEntry {
-  type: 'babyMood';
-  /** 1 = very fussy … 5 = delighted */
-  mood: number;
-  tags: string[];
-}
-
-export interface MilestoneEntry extends BaseEntry {
-  type: 'milestone';
-  key: string;
-}
-
-export interface SymptomEntry extends BaseEntry {
-  type: 'symptom';
-  symptoms: string[];
-  /** 1 = barely … 5 = severe */
-  severity: number;
-  /** 1 = rough … 5 = great */
-  mood: number;
-}
-
-export interface WeightEntry extends BaseEntry {
-  type: 'weight';
-  kg: number;
-}
-
-export interface KicksEntry extends BaseEntry {
-  type: 'kicks';
-  count: number;
-  durationMin: number;
-}
-
-export interface ContractionEntry extends BaseEntry {
-  type: 'contraction';
-  /** Length of the contraction. */
-  durationSec: number;
-  /** Gap since the previous contraction started. */
-  intervalSec?: number;
-}
-
-export interface AppointmentEntry extends BaseEntry {
-  type: 'appointment';
-  title: string;
-  kind: 'scan' | 'midwife' | 'doctor' | 'class' | 'vaccine' | 'other';
-  done?: boolean;
-}
-
-export type Entry =
-  | FeedEntry
-  | SleepEntry
-  | DiaperEntry
-  | GrowthEntry
-  | BabyMoodEntry
-  | MilestoneEntry
-  | SymptomEntry
-  | WeightEntry
-  | KicksEntry
-  | ContractionEntry
-  | AppointmentEntry;
 
 export interface Profile {
   parentName: string;
-  mode: Mode;
-  /** ISO date (yyyy-mm-dd) */
+  babyName: string;
+  stage: Stage;
   dueDate?: string;
   birthDate?: string;
-  babyName?: string;
-  babySex?: 'girl' | 'boy' | 'surprise';
+  babySex?: 'girl' | 'boy' | 'unknown';
   prePregnancyWeightKg?: number;
-  heightCm?: number;
+  country: string;
   onboarded: boolean;
 }
 
@@ -133,25 +100,34 @@ export type UnitSystem = 'metric' | 'imperial';
 export interface Settings {
   units: UnitSystem;
   clock24h: boolean;
-  dailyGoalXp: number;
-  remindersOn: boolean;
+  reviewHour: number;
+  drinks: string[];
 }
 
-export interface Gamification {
-  xp: number;
-  gems: number;
-  streak: number;
-  longestStreak: number;
-  /** yyyy-mm-dd of the last day that earned XP. */
-  lastActiveDay?: string;
-  streakFreezes: number;
-  /** yyyy-mm-dd days a freeze was spent on. */
-  freezeDaysUsed: string[];
-  unlockedBadges: string[];
-  /** yyyy-mm-dd -> xp earned that day */
-  xpByDay: Record<string, number>;
-  /** questId -> yyyy-mm-dd it was claimed */
-  claimedQuests: Record<string, string>;
+/** A tile on the home grid. */
+export interface Tile {
+  key: TrackerKey | 'today' | 'dot';
+  /** 1 = half width, 2 = full width. */
+  span: 1 | 2;
+}
+
+export interface Progress {
+  /** Claimed level within the current stage's ladder. */
+  pregnancyLevel: number;
+  babyLevel: number;
+  /** Level ids the parent has explicitly confirmed. */
+  claimed: string[];
+  /** Level ids dismissed with "not yet" — re-offered later. */
+  snoozed: Record<string, string>;
+  badges: string[];
+  /** yyyy-mm-dd of every day the app was opened. */
+  daysOpened: string[];
+  /** Weekly size cards collected, by week number. */
+  cards: number[];
+  activePack: string;
+  /** Milestone/first ids that have been marked, with their date. */
+  marks: Record<string, string>;
+  hatched: boolean;
 }
 
 export interface Subscription {
@@ -160,7 +136,24 @@ export interface Subscription {
   since?: string;
 }
 
-/** Distributive Omit so each variant keeps its own discriminated fields. */
-export type EntryDraft = {
-  [K in Entry['type']]: Omit<Extract<Entry, { type: K }>, 'id' | 'createdAt'>;
-}[Entry['type']];
+export interface PlanItem {
+  id: string;
+  title: string;
+  /** yyyy-mm-dd */
+  date: string;
+  time?: string;
+  kind: 'appointment' | 'scan' | 'class' | 'visitor' | 'reminder' | 'care';
+  note?: string;
+  careKey?: string;
+  done?: boolean;
+}
+
+export interface Memory {
+  id: string;
+  /** Emoji stand-in for the photo in this prototype. */
+  glyph: string;
+  caption: string;
+  at: string;
+  tag?: string;
+  firstKey?: string;
+}

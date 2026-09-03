@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Bloom",
-    "slug": "bloom",
-    "scheme": "bloom",
+    "name": "Nest",
+    "slug": "nest",
+    "scheme": "nest",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,16 +11,16 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FFF7FA"
+      "backgroundColor": "#F5F1EA"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bloom.tracker"
+      "bundleIdentifier": "com.nest.tracker"
     },
     "android": {
-      "package": "com.bloom.tracker",
+      "package": "com.nest.tracker",
       "adaptiveIcon": {
-        "backgroundColor": "#FFF7FA",
+        "backgroundColor": "#F5F1EA",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -33,7 +33,10 @@
       "output": "single",
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-font"],
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
     "experiments": {
       "typedRoutes": false
     }

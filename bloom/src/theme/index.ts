@@ -1,108 +1,108 @@
 /**
- * Bloom design system.
+ * Nest design system.
  *
- * The visual language borrows Duolingo's core ideas — chunky 3D-pressed
- * buttons, saturated accent colours, generous rounding, oversized numerals —
- * but uses a blossom/mint palette so it reads as a family product rather than
- * a language game.
+ * Parchment and earth: a warm paper ground, warm brown ink, and a set of muted
+ * accents that each own one part of the app. Dot's marigold is the only fully
+ * saturated colour in the system and is reserved for the companion, level-ups
+ * and the primary action — so the eye always knows where the reward is.
  */
 
 export const palette = {
-  // Brand accents
-  blossom: '#FF4D79',
-  blossomDark: '#D62F5B',
-  blossomSoft: '#FFE4EC',
+  // Ground
+  paper: '#F5F1EA',
+  paperDeep: '#EDE7DC',
+  card: '#FFFDF8',
+  cardSunk: '#F7F3EB',
 
-  mint: '#22CC88',
-  mintDark: '#16A36A',
-  mintSoft: '#DCFAEE',
+  // Ink
+  ink: '#2B2724',
+  inkSoft: '#6B6259',
+  inkFaint: '#9C9389',
+  line: '#E2DBCF',
+  lineSoft: '#EDE8DE',
 
-  sky: '#2BB3F3',
-  skyDark: '#1C8FC7',
-  skySoft: '#DEF2FE',
+  // Dot's marigold — the one bright colour
+  dot: '#E8B75E',
+  dotDeep: '#C9913A',
+  dotSoft: '#FAEFD5',
+  bill: '#E39A4B',
+  billDeep: '#C97B3C',
 
-  sunny: '#FFC02E',
-  sunnyDark: '#DB9C00',
-  sunnySoft: '#FFF3D4',
-
-  grape: '#8B5CF6',
-  grapeDark: '#6D38E0',
-  grapeSoft: '#EFE7FE',
-
-  coral: '#FF7A45',
-  coralDark: '#DB5A26',
-  coralSoft: '#FFEDE3',
-
-  // Neutrals
-  ink: '#2C2438',
-  inkSoft: '#6B6480',
-  inkFaint: '#A7A1B8',
-  line: '#E9E5F0',
-  cloud: '#F6F4FA',
-  card: '#FFFFFF',
-  bg: '#FFFFFF',
-  white: '#FFFFFF',
+  // Accents (carried over from the v3 tracker registry)
+  blue: '#4E6E96',
+  blueSoft: '#E3ECF7',
+  sage: '#4F8467',
+  sageSoft: '#E5F1E9',
+  clay: '#96683F',
+  claySoft: '#F7EDE1',
+  rose: '#B5635C',
+  roseSoft: '#FBE8E5',
+  plum: '#7561A0',
+  plumSoft: '#EEE9F8',
+  teal: '#3F7F86',
+  tealSoft: '#E2F0F1',
+  moss: '#6A7C4A',
+  mossSoft: '#EDF2E1',
+  gold: '#B0803C',
+  goldSoft: '#F3E7C8',
 
   // States
-  danger: '#F4364C',
-  dangerSoft: '#FFE3E6',
-  locked: '#CFC9DB',
+  danger: '#A6402F',
+  dangerSoft: '#F7E2DD',
+  white: '#FFFFFF',
 } as const;
 
-export const gradients = {
-  premium: ['#8B5CF6', '#FF4D79'] as const,
-  night: ['#3A2E63', '#5B4B9E'] as const,
-  day: ['#FFD36E', '#FF9F45'] as const,
-  blossom: ['#FF6E92', '#FF4D79'] as const,
+export type AccentName = 'blue' | 'sage' | 'clay' | 'rose' | 'plum' | 'teal' | 'moss' | 'gold' | 'dot';
+
+export const accent = (name: AccentName) => {
+  if (name === 'dot') return { base: palette.dot, deep: palette.dotDeep, soft: palette.dotSoft };
+  return {
+    base: palette[name],
+    deep: palette[name],
+    soft: palette[`${name}Soft` as const],
+  };
 };
 
-export const radius = {
-  sm: 10,
-  md: 16,
-  lg: 22,
-  xl: 30,
-  pill: 999,
-} as const;
+export const radius = { sm: 8, md: 14, lg: 20, xl: 28, pill: 999 } as const;
 
-export const spacing = (n: number) => n * 4;
+export const space = (n: number) => n * 4;
 
-/** Duolingo-style solid drop shadow: a darker slab under the element. */
-export const slab = (color: string, depth = 4) => ({
-  borderBottomWidth: depth,
-  borderBottomColor: color,
-});
-
+/**
+ * Nest has no slab shadows. Depth comes from paper: a hairline rule, a slightly
+ * lifted card, and a soft warm shadow — the feel of things resting on a desk.
+ */
 export const shadow = {
-  card: {
-    shadowColor: '#2C2438',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+  rest: {
+    shadowColor: '#3A2E1E',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
-  float: {
-    shadowColor: '#2C2438',
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 8 },
+  lift: {
+    shadowColor: '#3A2E1E',
+    shadowOpacity: 0.13,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 10 },
     elevation: 6,
   },
 };
 
-export const type = {
-  display: { fontSize: 34, fontWeight: '900' as const, letterSpacing: -0.6 },
-  title: { fontSize: 24, fontWeight: '900' as const, letterSpacing: -0.4 },
-  heading: { fontSize: 18, fontWeight: '800' as const, letterSpacing: -0.2 },
-  body: { fontSize: 15, fontWeight: '600' as const },
-  label: { fontSize: 13, fontWeight: '800' as const, letterSpacing: 0.2 },
-  caption: { fontSize: 12, fontWeight: '700' as const },
-  numeral: { fontSize: 40, fontWeight: '900' as const, letterSpacing: -1.5 },
+export const font = {
+  display: 'Fraunces_600SemiBold',
+  displayBold: 'Fraunces_700Bold',
+  body: 'NunitoSans_400Regular',
+  bodyMed: 'NunitoSans_600SemiBold',
+  bodyBold: 'NunitoSans_700Bold',
 };
 
-export type AccentName = 'blossom' | 'mint' | 'sky' | 'sunny' | 'grape' | 'coral';
-
-export const accent = (name: AccentName) => ({
-  base: palette[name],
-  dark: palette[`${name}Dark` as const],
-  soft: palette[`${name}Soft` as const],
-});
+export const type = {
+  hero: { fontFamily: font.displayBold, fontSize: 30, letterSpacing: -0.4, lineHeight: 36 },
+  title: { fontFamily: font.displayBold, fontSize: 22, letterSpacing: -0.2, lineHeight: 28 },
+  heading: { fontFamily: font.display, fontSize: 17, lineHeight: 23 },
+  body: { fontFamily: font.body, fontSize: 15, lineHeight: 21 },
+  bodyMed: { fontFamily: font.bodyMed, fontSize: 15, lineHeight: 21 },
+  small: { fontFamily: font.body, fontSize: 13, lineHeight: 18 },
+  label: { fontFamily: font.bodyBold, fontSize: 11, letterSpacing: 0.9 },
+  numeral: { fontFamily: font.displayBold, fontSize: 32, letterSpacing: -0.8 },
+};
