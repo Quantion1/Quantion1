@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { ALBUM_WEEKS } from '@/domain/cards';
 import { starterTiles } from '@/domain/trackers';
 import type {
   Entry, Memory, PlanItem, Profile, Progress, Settings, Stage, Subscription, Tile, TrackerKey,
@@ -52,6 +53,8 @@ interface State {
   hatch: (birthDate: string, babyName: string) => void;
 
   collectCard: (week: number) => void;
+  /** Opens every week of the album at once — what the birth does to it. */
+  unlockAllCards: () => void;
   setPack: (id: string) => void;
   mark: (key: string, date?: string) => void;
   unmark: (key: string) => void;
@@ -199,14 +202,18 @@ export const useStore = create<State>()(
           toast: { emoji: '🐣', title: 'Dot hatched', sub: 'Player two has entered', at: Date.now(), big: true },
         })),
 
+      // No toast: a card is only ever collected by opening it, and the card
+      // itself is the announcement.
       collectCard: (week) =>
         set((s) =>
           s.progress.cards.includes(week)
             ? {}
-            : {
-                progress: { ...s.progress, cards: [...s.progress.cards, week] },
-                toast: { emoji: '🃏', title: `Week ${week} card collected`, at: Date.now() },
-              },
+            : { progress: { ...s.progress, cards: [...s.progress.cards, week] } },
+        ),
+
+      unlockAllCards: () =>
+        set((s) =>
+          s.progress.cards.length >= ALBUM_WEEKS.length ? {} : { progress: { ...s.progress, cards: [...ALBUM_WEEKS] } },
         ),
 
       setPack: (id) => set((s) => ({ progress: { ...s.progress, activePack: id } })),

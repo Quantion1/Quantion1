@@ -15,7 +15,8 @@ import { tileMeta } from '@/domain/describe';
 import { tracker } from '@/domain/trackers';
 import type { Tile as TileT } from '@/domain/types';
 import {
-  useAutoMoments, useBadgeSync, useMomentAsk, useNest, useOpenTracking, useRhythm, useTodayEntries,
+  useAutoMoments, useBadgeSync, useCardSync, useMomentAsk, useNest, useOpenTracking, useRhythm,
+  useTodayEntries,
 } from '@/state/hooks';
 import { useSettings, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
@@ -32,7 +33,6 @@ export default function HomeScreen() {
   const progress = useStore((s) => s.progress);
   const addEntry = useStore((s) => s.addEntry);
   const snoozeMoment = useStore((s) => s.snoozeMoment);
-  const collectCard = useStore((s) => s.collectCard);
   const removeTile = useStore((s) => s.removeTile);
   const resizeTile = useStore((s) => s.resizeTile);
   const moveTile = useStore((s) => s.moveTile);
@@ -45,6 +45,7 @@ export default function HomeScreen() {
   useBadgeSync();
   useOpenTracking();
   useAutoMoments();
+  useCardSync();
 
   const weekCard = nest.stage === 'pregnancy' && nest.week >= 4
     ? { week: Math.min(40, nest.week), collected: progress.cards.includes(Math.min(40, nest.week)) }
@@ -108,8 +109,9 @@ export default function HomeScreen() {
                 <Label>Week {weekCard.week} card</Label>
                 <Heading>There's a new card waiting</Heading>
                 <Body style={{ fontSize: 13 }}>{devNote(nest.week)}</Body>
-                <Button title="Collect it" tone="clay" size="sm" style={{ alignSelf: 'flex-start', marginTop: 6 }}
-                  onPress={() => collectCard(weekCard.week)} />
+                {/* Opening it is what collects it — and there is something to read. */}
+                <Button title="Open it" tone="clay" size="sm" style={{ alignSelf: 'flex-start', marginTop: 6 }}
+                  onPress={() => { tap(); router.push(`/card/${weekCard.week}`); }} />
               </View>
               <Text style={{ fontSize: 40 }}>🃏</Text>
             </View>

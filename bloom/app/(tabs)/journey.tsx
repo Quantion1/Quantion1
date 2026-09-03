@@ -6,11 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CardFace } from '@/components/CardFace';
 import { Body, Card, Chip, Heading, Label, Segmented, Small, Title, Wrap, styles, tap } from '@/components/ui';
 import { BADGE_GROUPS, evaluateBadges } from '@/domain/badges';
-import { cardFor, PACKS } from '@/domain/cards';
+import { ALBUM_WEEKS, cardFor, PACKS } from '@/domain/cards';
 import { allMoments, eraStates, isCaptured, road, usually, type EraState, type Moment } from '@/domain/moments';
 import type { Progress } from '@/domain/types';
 import { MONTHS } from '@/lib/date';
-import { useNest } from '@/state/hooks';
+import { useCardSync, useNest } from '@/state/hooks';
 import { usePremium, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
 import { useScheme } from '@/theme/scheme';
@@ -30,9 +30,9 @@ export default function JourneyScreen() {
   const progress = useStore((s) => s.progress);
   const entries = useStore((s) => s.entries);
   const setPack = useStore((s) => s.setPack);
-  const collectCard = useStore((s) => s.collectCard);
   const premium = usePremium();
   const [tab, setTab] = useState<Tab>('moments');
+  useCardSync();
 
   const chapters = eraStates(nest.stage, progress, nest.position);
   const ahead = road(nest.stage, progress, nest.position);
@@ -42,7 +42,6 @@ export default function JourneyScreen() {
   const earned = badges.filter((b) => b.done).length;
 
   const maxWeek = nest.stage === 'pregnancy' ? Math.min(40, nest.week) : 40;
-  const albumWeeks = Array.from({ length: 37 }, (_, i) => i + 4);
 
   const open = (m: Moment) => { tap(); router.push(`/moment/${m.id}`); };
 
@@ -110,7 +109,10 @@ export default function JourneyScreen() {
         {tab === 'cards' && (
           <View style={{ gap: 14 }}>
             <Body style={{ fontSize: 13 }}>
-              One card a week, four to forty. The pack changes what the baby is compared to — never the measurements.
+              {nest.stage === 'pregnancy'
+                ? 'One card a week, four to forty, earned by reaching the week. Open one to read what was being built in there at the time.'
+                : 'The pregnancy is over, so the album is open in full. Open any week to read what was being built in there at the time.'}
+              {' '}The pack changes what the baby is compared to — never the measurements.
             </Body>
 
             <Wrap>
@@ -126,22 +128,21 @@ export default function JourneyScreen() {
             <Small>{PACKS.find((p) => p.id === progress.activePack)?.blurb}</Small>
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' }}>
-              {albumWeeks.map((w) => {
-                const collected = progress.cards.includes(w);
+              {ALBUM_WEEKS.map((w) => {
                 const reachable = w <= maxWeek;
                 return (
                   <Pressable
                     key={w}
-                    onPress={() => { if (reachable && !collected) { tap(); collectCard(w); } }}
+                    onPress={() => { if (reachable) { tap(); router.push(`/card/${w}`); } }}
                     style={{ opacity: reachable ? 1 : 0.4 }}
                   >
-                    <CardFace card={cardFor(progress.activePack, w)} collected={collected} size="sm" />
+                    <CardFace card={cardFor(progress.activePack, w)} collected={progress.cards.includes(w)} size="sm" />
                   </Pressable>
                 );
               })}
             </View>
             <Small style={{ textAlign: 'center' }}>
-              {progress.cards.length} of 37 collected · tap a reached week to add it
+              {progress.cards.length} of {ALBUM_WEEKS.length} collected · tap a card to open it
             </Small>
           </View>
         )}

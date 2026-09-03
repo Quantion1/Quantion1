@@ -74,6 +74,7 @@ export default function RootLayout() {
           <Stack.Screen name="review" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="hatch" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="moment/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="card/[week]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="history" options={{ animation: 'slide_from_right' }} />
         </Stack>

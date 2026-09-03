@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 
 import { evaluateBadges } from '@/domain/badges';
-import { availableCards, cardFor } from '@/domain/cards';
+import { ALBUM_WEEKS, availableCards, cardFor } from '@/domain/cards';
 import { capturedCount, dotPose, eraStates, isCaptured, momentById, pendingAsk } from '@/domain/moments';
 import { babyAge, gestation, position } from '@/domain/stage';
 import { availability, TRACKERS } from '@/domain/trackers';
@@ -133,6 +133,22 @@ export function useWeeklyCard() {
       available: availableCards(nest.week).length,
     };
   }, [nest.stage, nest.week, progress.activePack, progress.cards]);
+}
+
+/**
+ * Once the baby is here the pregnancy is over and there is nothing left to
+ * reach, so the album opens in full — including for anyone who arrived at this
+ * stage before that was the rule.
+ */
+export function useCardSync() {
+  const stage = useStore((s) => s.profile.stage);
+  const onboarded = useStore((s) => s.profile.onboarded);
+  const collected = useStore((s) => s.progress.cards.length);
+  const unlockAllCards = useStore((s) => s.unlockAllCards);
+
+  useEffect(() => {
+    if (onboarded && stage === 'baby' && collected < ALBUM_WEEKS.length) unlockAllCards();
+  }, [onboarded, stage, collected, unlockAllCards]);
 }
 
 /** Awards any badge whose target has just been met. */
