@@ -7,7 +7,7 @@ import { CardFace } from '@/components/CardFace';
 import { Dot } from '@/components/Dot';
 import { LevelPrompt } from '@/components/LevelPrompt';
 import { Rhythm } from '@/components/Rhythm';
-import { Tile } from '@/components/Tile';
+import { EditBanner, TileGrid } from '@/components/TileGrid';
 import { Body, Button, Card, Heading, Label, Small, Title, styles, tap } from '@/components/ui';
 import { devNote } from '@/domain/cards';
 import { ladder } from '@/domain/levels';
@@ -39,6 +39,7 @@ export default function HomeScreen() {
   const rhythm = useRhythm();
   const prompt = useLevelPrompt();
   const [editing, setEditing] = useState(false);
+  const [gridWidth, setGridWidth] = useState(0);
   useBadgeSync();
   useOpenTracking();
 
@@ -115,29 +116,31 @@ export default function HomeScreen() {
         )}
 
         {/* ─────────────────────────────────────────────────── tile grid */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Label>{editing ? 'Arrange your screen' : 'Today'}</Label>
-          <Pressable onPress={() => { tap(); setEditing((v) => !v); }} hitSlop={10}>
-            <Text style={{ ...type.label, color: palette.inkSoft }}>{editing ? 'DONE' : 'EDIT'}</Text>
-          </Pressable>
-        </View>
+        {editing ? (
+          <EditBanner onDone={() => { tap(); setEditing(false); }} />
+        ) : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Label>Today</Label>
+            <Pressable onPress={() => { tap(); setEditing(true); }} hitSlop={10}>
+              <Text style={{ ...type.label, color: palette.inkSoft }}>EDIT</Text>
+            </Pressable>
+          </View>
+        )}
 
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-          {tiles.map((t, i) => (
-            <Tile
-              key={t.key}
-              tkey={t.key}
-              span={t.span}
+        <View onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
+          {gridWidth > 0 && (
+            <TileGrid
+              tiles={tiles}
+              width={gridWidth}
               editing={editing}
-              atStart={i === 0}
-              atEnd={i === tiles.length - 1}
-              meta={t.key === 'today' ? 'the day so far' : tileMeta(t.key, today, entries, settings)}
-              onPress={() => openTile(t)}
-              onRemove={() => removeTile(t.key)}
-              onResize={() => resizeTile(t.key)}
-              onMove={(d) => moveTile(t.key, d)}
+              meta={(key) => (key === 'today' ? 'the day so far' : tileMeta(key, today, entries, settings))}
+              onEnterEdit={() => setEditing(true)}
+              onOpen={openTile}
+              onRemove={removeTile}
+              onMove={moveTile}
+              onResize={resizeTile}
             />
-          ))}
+          )}
         </View>
 
         <Button
@@ -147,8 +150,6 @@ export default function HomeScreen() {
           icon="＋"
           onPress={() => router.push('/library')}
         />
-
-        {editing && <Small style={{ textAlign: 'center' }}>✕ removes · ⤡ resizes · ‹ › reorders</Small>}
 
         {!tiles.length && (
           <Card>

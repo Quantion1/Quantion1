@@ -104,11 +104,13 @@ export interface Settings {
   drinks: string[];
 }
 
-/** A tile on the home grid. */
+/** A tile on the home grid, sized in grid cells like a launcher widget. */
 export interface Tile {
   key: TrackerKey | 'today' | 'dot';
-  /** 1 = half width, 2 = full width. */
+  /** Width: 1 = half, 2 = full. */
   span: 1 | 2;
+  /** Height in rows; absent means one row (older saved layouts). */
+  h?: 1 | 2;
 }
 
 export interface Progress {

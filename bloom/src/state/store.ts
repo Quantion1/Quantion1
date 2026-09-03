@@ -38,8 +38,9 @@ interface State {
   setTiles: (tiles: Tile[]) => void;
   addTile: (key: TrackerKey) => void;
   removeTile: (key: string) => void;
-  resizeTile: (key: string) => void;
-  moveTile: (key: string, delta: number) => void;
+  resizeTile: (key: string, span: 1 | 2, h: 1 | 2) => void;
+  /** Move a tile to an absolute index — the drag-to-reorder gesture's only write. */
+  moveTile: (key: string, to: number) => void;
 
   claimLevel: (id: string, title: string, emoji: string) => void;
   snoozeLevel: (id: string) => void;
@@ -132,18 +133,18 @@ export const useStore = create<State>()(
 
       removeTile: (key) => set((s) => ({ tiles: s.tiles.filter((t) => t.key !== key) })),
 
-      resizeTile: (key) =>
+      resizeTile: (key, span, h) =>
         set((s) => ({
-          tiles: s.tiles.map((t) => (t.key === key ? { ...t, span: t.span === 1 ? 2 : 1 } : t)),
+          tiles: s.tiles.map((t) => (t.key === key ? { ...t, span, h } : t)),
         })),
 
-      moveTile: (key, delta) =>
+      moveTile: (key, to) =>
         set((s) => {
-          const i = s.tiles.findIndex((t) => t.key === key);
-          const j = i + delta;
-          if (i < 0 || j < 0 || j >= s.tiles.length) return {};
+          const from = s.tiles.findIndex((t) => t.key === key);
+          if (from < 0 || to < 0 || to >= s.tiles.length || from === to) return {};
           const next = [...s.tiles];
-          [next[i], next[j]] = [next[j], next[i]];
+          const [moved] = next.splice(from, 1);
+          next.splice(to, 0, moved);
           return { tiles: next };
         }),
 
