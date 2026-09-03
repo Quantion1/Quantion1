@@ -1,3 +1,5 @@
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 
 import { buildICS, type CalendarEvent } from './ics';
@@ -27,8 +29,6 @@ export async function exportToCalendar(event: CalendarEvent): Promise<void> {
     return;
   }
 
-  const { File, Paths } = await import('expo-file-system');
-  const Sharing = await import('expo-sharing');
   const file = new File(Paths.cache, filename);
   if (file.exists) file.delete();
   file.create();
