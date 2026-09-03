@@ -1,8 +1,25 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, View } from 'react-native';
+import { Animated, Easing, Image, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, Path, Rect } from 'react-native-svg';
 
 export type DotStage = 'egg0' | 'egg1' | 'egg2' | 'egg3' | 'sleep' | 'tummy' | 'sit' | 'stand' | 'walk';
+
+/**
+ * Dot's real look — one static image per stage. Drop a picture at each of these
+ * paths (any of the sizes it ships at is fine, this scales to fit) and it replaces
+ * the placeholder immediately, no other code changes needed.
+ */
+const DOT_IMAGES: Record<DotStage, number> = {
+  egg0: require('../../assets/dot/egg0.png'),
+  egg1: require('../../assets/dot/egg1.png'),
+  egg2: require('../../assets/dot/egg2.png'),
+  egg3: require('../../assets/dot/egg3.png'),
+  sleep: require('../../assets/dot/sleep.png'),
+  tummy: require('../../assets/dot/tummy.png'),
+  sit: require('../../assets/dot/sit.png'),
+  stand: require('../../assets/dot/stand.png'),
+  walk: require('../../assets/dot/walk.png'),
+};
 
 const C = {
   body: '#F7D27C',
@@ -192,7 +209,33 @@ function Egg({ cracks }: { cracks: number }) {
   );
 }
 
+/** Dot, drawn as a static image per stage — see DOT_IMAGES above to swap in the real art. */
 export function Dot({ stage = 'sleep', size = 120 }: { stage?: DotStage; size?: number }) {
+  const bob = useRef(new Animated.Value(0)).current;
+  const resting = stage === 'sleep' || stage.startsWith('egg');
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bob, { toValue: 1, duration: resting ? 2600 : 1500, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(bob, { toValue: 0, duration: resting ? 2600 : 1500, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [bob, resting]);
+
+  const translateY = bob.interpolate({ inputRange: [0, 1], outputRange: [0, resting ? -2 : -4] });
+
+  return (
+    <Animated.View style={{ transform: [{ translateY }] }}>
+      <Image source={DOT_IMAGES[stage]} style={{ width: size, height: size * 0.84 }} resizeMode="contain" />
+    </Animated.View>
+  );
+}
+
+/** The original hand-drawn duck, kept in case a stage still needs a fallback illustration. */
+export function DotDrawing({ stage = 'sleep', size = 120 }: { stage?: DotStage; size?: number }) {
   const bob = useRef(new Animated.Value(0)).current;
   const resting = stage === 'sleep' || stage.startsWith('egg');
 

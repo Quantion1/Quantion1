@@ -88,12 +88,15 @@ export const shadow = {
   },
 };
 
+// Each includes a web-safe fallback stack (RN Web renders these as CSS font-family
+// lists; native ignores the extra names) so text stays legible even if the custom
+// typeface never loads — no gate should ever depend on these actually resolving.
 export const font = {
-  display: 'Fraunces_600SemiBold',
-  displayBold: 'Fraunces_700Bold',
-  body: 'NunitoSans_400Regular',
-  bodyMed: 'NunitoSans_600SemiBold',
-  bodyBold: 'NunitoSans_700Bold',
+  display: 'Fraunces_600SemiBold, Georgia, serif',
+  displayBold: 'Fraunces_700Bold, Georgia, serif',
+  body: 'NunitoSans_400Regular, -apple-system, Helvetica, Arial, sans-serif',
+  bodyMed: 'NunitoSans_600SemiBold, -apple-system, Helvetica, Arial, sans-serif',
+  bodyBold: 'NunitoSans_700Bold, -apple-system, Helvetica, Arial, sans-serif',
 };
 
 export const type = {
