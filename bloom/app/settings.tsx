@@ -87,6 +87,7 @@ export default function Settings() {
                   key={d.id}
                   label={d.label}
                   emoji={d.emoji}
+                  icon={d.icon ? <d.icon size={16} color={on ? palette.clay : palette.inkSoft} /> : undefined}
                   selected={on}
                   onPress={() => setSettings({ drinks: on ? settings.drinks.filter((x) => x !== d.id) : [...settings.drinks, d.id] })}
                 />

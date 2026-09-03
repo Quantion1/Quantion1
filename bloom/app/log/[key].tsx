@@ -329,7 +329,7 @@ function BlockView({
                   alignItems: 'center', gap: 4,
                 }}
               >
-                <Text style={{ fontSize: 26 }}>{d.emoji}</Text>
+                {d.icon ? <d.icon size={30} color={accent(tone).base} /> : <Text style={{ fontSize: 26 }}>{d.emoji}</Text>}
                 <Text style={{ ...type.bodyMed, color: palette.ink }}>{d.label}</Text>
                 <Small>{d.ml} ml</Small>
               </Pressable>

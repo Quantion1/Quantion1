@@ -150,10 +150,12 @@ export const Wrap = ({ children, gap = 8 }: { children: React.ReactNode; gap?: n
 /* ------------------------------------------------------------------ chip */
 
 export function Chip({
-  label, emoji, selected, onPress, tone = 'clay', small,
+  label, emoji, icon, selected, onPress, tone = 'clay', small,
 }: {
   label: string;
   emoji?: string;
+  /** Drawn in place of the emoji, for anything the emoji set has no glyph for. */
+  icon?: React.ReactNode;
   selected?: boolean;
   onPress: () => void;
   tone?: AccentName;
@@ -175,7 +177,7 @@ export function Chip({
         gap: 6,
       }}
     >
-      {!!emoji && <Text style={{ fontSize: small ? 13 : 15 }}>{emoji}</Text>}
+      {icon ?? (!!emoji && <Text style={{ fontSize: small ? 13 : 15 }}>{emoji}</Text>)}
       <Text style={{ ...type.bodyMed, fontSize: small ? 12.5 : 14, color: selected ? a.base : palette.inkSoft }}>
         {label}
       </Text>
