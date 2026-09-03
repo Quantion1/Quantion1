@@ -14,6 +14,7 @@ import { formatDuration, formatTime } from '@/lib/date';
 import { fromDisplay, toDisplay } from '@/lib/units';
 import { useSettings, useStore } from '@/state/store';
 import { accent, palette, radius, shadow, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 type Draft = Partial<Omit<Entry, 'id' | 'createdAt' | 'tracker'>>;
 
@@ -25,6 +26,8 @@ const TEETH = [
 ];
 
 export default function LogSheet() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const { key } = useLocalSearchParams<{ key: string }>();
   const router = useRouter();
   const settings = useSettings();

@@ -11,10 +11,13 @@ import { TRACKERS } from '@/domain/trackers';
 import { daysBetween, fromDayKey, toDayKey } from '@/lib/date';
 import { usePremium, useStore } from '@/state/store';
 import { palette, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 const FREE_DAYS = 7;
 
 export default function History() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const entries = useStore((s) => s.entries);
   const deleteEntry = useStore((s) => s.deleteEntry);

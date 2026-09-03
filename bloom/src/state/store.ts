@@ -81,6 +81,7 @@ const emptyProfile: Profile = {
 const defaultSettings: Settings = {
   units: 'metric',
   clock24h: true,
+  theme: 'system',
   reviewHour: 21,
   drinks: ['glass', 'mug', 'bottle'],
 };
@@ -258,6 +259,20 @@ export const useStore = create<State>()(
     {
       name: 'nest-store-v1',
       storage: createJSONStorage(() => AsyncStorage),
+      // A store saved before a setting existed has no key for it, and the default
+      // merge only reaches the top level — so fill each nested record back in from
+      // the fresh defaults rather than letting the saved object replace it whole.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<typeof current>;
+        return {
+          ...current,
+          ...p,
+          profile: { ...current.profile, ...p.profile },
+          settings: { ...current.settings, ...p.settings },
+          progress: { ...current.progress, ...p.progress },
+          sub: { ...current.sub, ...p.sub },
+        };
+      },
       partialize: (s) => ({
         profile: s.profile,
         settings: s.settings,

@@ -7,6 +7,7 @@ import { Dot } from '@/components/Dot';
 import { Body, Button, Card, Heading, Label, Small, Title, ping, tap } from '@/components/ui';
 import { usePremium, useStore } from '@/state/store';
 import { palette, radius, shadow, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 type Plan = 'monthly' | 'annual' | 'lifetime';
 
@@ -32,6 +33,8 @@ const ROWS: [string, string, string][] = [
 ];
 
 export default function Paywall() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const premium = usePremium();
   const setPremium = useStore((s) => s.setPremium);

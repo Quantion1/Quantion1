@@ -10,6 +10,7 @@ import { formatRelative } from '@/lib/date';
 import { useNest } from '@/state/hooks';
 import { usePremium, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 const FREE_PHOTOS = 12;
 
@@ -36,6 +37,8 @@ const FIRSTS_PREG = [
 const GLYPHS = ['📷', '🤰', '🖥️', '👣', '🛁', '🎂', '🧸', '🌳', '🚗', '👵', '🐶', '😊'];
 
 export default function PhotosScreen() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const nest = useNest();
   const premium = usePremium();

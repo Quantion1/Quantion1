@@ -8,12 +8,15 @@ import { DateInput } from '@/components/DateInput';
 import { Body, Button, Card, Chip, Field, Heading, Label, Rule, Segmented, Small, Title, Wrap, tap } from '@/components/ui';
 import { CARE_SYSTEMS, COUNTRY_ORDER } from '@/domain/care';
 import { DRINKS } from '@/domain/drinks';
-import type { UnitSystem } from '@/domain/types';
+import type { ThemePref, UnitSystem } from '@/domain/types';
 import { useNest } from '@/state/hooks';
 import { usePremium, useProfile, useSettings, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 export default function Settings() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const profile = useProfile();
   const settings = useSettings();
@@ -39,6 +42,22 @@ export default function Settings() {
 
       <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 0, gap: 16, paddingBottom: 44 }}>
         <Card>
+          <Heading>Appearance</Heading>
+          <Small style={{ marginTop: 2, marginBottom: 10 }}>
+            Dark is a warm night parchment, not a grey app. System follows your phone.
+          </Small>
+          <Segmented<ThemePref>
+            value={settings.theme}
+            onChange={(v) => setSettings({ theme: v })}
+            options={[
+              { value: 'system', label: 'System' },
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' },
+            ]}
+          />
+        </Card>
+
+        <Card>
           <Heading>Units and time</Heading>
           <View style={{ gap: 10, marginTop: 12 }}>
             <Label>Units</Label>
@@ -53,7 +72,7 @@ export default function Settings() {
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
             <Body style={{ color: palette.ink }}>24-hour clock</Body>
-            <Switch value={settings.clock24h} onValueChange={(v) => setSettings({ clock24h: v })} trackColor={{ true: palette.dot, false: palette.line }} thumbColor={palette.white} />
+            <Switch value={settings.clock24h} onValueChange={(v) => setSettings({ clock24h: v })} trackColor={{ true: palette.dot, false: palette.line }} thumbColor={palette.card} />
           </View>
         </Card>
 

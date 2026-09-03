@@ -26,7 +26,7 @@ export function PremiumGate({
         style={{
           position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
           alignItems: 'center', justifyContent: 'center', padding: 18, gap: 7,
-          backgroundColor: 'rgba(245,241,234,0.72)',
+          backgroundColor: palette.scrim,
         }}
       >
         <Text style={{ fontSize: 20 }}>🔒</Text>

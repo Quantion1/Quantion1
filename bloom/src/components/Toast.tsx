@@ -31,7 +31,7 @@ export function Toast() {
   if (toast.big) {
     return (
       <Modal transparent animationType="fade" onRequestClose={clear}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(43,39,36,0.45)', alignItems: 'center', justifyContent: 'center', padding: 28 }}>
+        <View style={{ flex: 1, backgroundColor: palette.backdrop, alignItems: 'center', justifyContent: 'center', padding: 28 }}>
           <View style={[{ backgroundColor: palette.card, borderRadius: radius.xl, padding: 26, alignItems: 'center', gap: 10, width: '100%', maxWidth: 340 }, shadow.lift]}>
             <Dot stage={nest.dot as any} size={130} />
             <Text style={{ ...type.label, color: palette.dotDeep, textTransform: 'uppercase' }}>{toast.sub ?? 'Nice'}</Text>

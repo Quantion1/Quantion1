@@ -10,6 +10,7 @@ import { addDays, fromDayKey, MONTHS, toDayKey, todayKey } from '@/lib/date';
 import { useNest } from '@/state/hooks';
 import { useProfile, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 const KINDS: { k: PlanItem['kind']; label: string; emoji: string }[] = [
   { k: 'appointment', label: 'Appointment', emoji: '🩺' },
@@ -20,6 +21,8 @@ const KINDS: { k: PlanItem['kind']; label: string; emoji: string }[] = [
 ];
 
 export default function PlanScreen() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const profile = useProfile();
   const nest = useNest();
   const plans = useStore((s) => s.plans);

@@ -8,6 +8,7 @@ import type { Tracker } from '@/domain/types';
 import { useLibrary, useNest } from '@/state/hooks';
 import { useStore } from '@/state/store';
 import { accent, palette, radius, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 /**
  * The tile library. Sorting by *when a tracker is relevant* is what lets the
@@ -15,6 +16,8 @@ import { accent, palette, radius, type } from '@/theme';
  * retires at three months, and neither needs a decision from the parent.
  */
 export default function Library() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const lib = useLibrary();
   const nest = useNest();

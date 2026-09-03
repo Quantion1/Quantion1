@@ -9,9 +9,12 @@ import { Body, Button, Card, Field, Heading, Label, Title, ping, tap } from '@/c
 import { addDays, todayKey } from '@/lib/date';
 import { useStore } from '@/state/store';
 import { palette } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 /** The one irreversible action in the app, so it asks properly. */
 export default function Hatch() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const hatch = useStore((s) => s.hatch);
   const [name, setName] = useState('');

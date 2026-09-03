@@ -16,10 +16,13 @@ import { mlToOz } from '@/lib/units';
 import { useNest } from '@/state/hooks';
 import { usePremium, useProfile, useSettings, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 type Range = '7' | '30' | '90';
 
 export default function InsightsScreen() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const { width } = useWindowDimensions();
   const chartW = width - 66;
   const router = useRouter();

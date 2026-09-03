@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { tap } from '@/components/ui';
 import { palette, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 const TABS = [
   { name: 'home', label: 'Home', glyph: '🏠' },
@@ -15,6 +16,8 @@ const TABS = [
 ];
 
 export default function TabsLayout() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const insets = useSafeAreaInsets();
 
   return (

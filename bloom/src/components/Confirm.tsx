@@ -45,7 +45,7 @@ export function ConfirmDialog() {
 
   return (
     <Modal transparent animationType="fade" onRequestClose={close}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(43,39,36,0.45)', alignItems: 'center', justifyContent: 'center', padding: 28 }}>
+      <View style={{ flex: 1, backgroundColor: palette.backdrop, alignItems: 'center', justifyContent: 'center', padding: 28 }}>
         <View style={[{ backgroundColor: palette.card, borderRadius: radius.xl, padding: 24, gap: 10, width: '100%', maxWidth: 340 }, shadow.lift]}>
           <Title>{open.title}</Title>
           {!!open.message && <Body>{open.message}</Body>}

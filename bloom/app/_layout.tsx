@@ -12,6 +12,7 @@ import { Dot } from '@/components/Dot';
 import { Toast } from '@/components/Toast';
 import { useStore } from '@/state/store';
 import { palette } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 function useHydrated() {
   const [hydrated, setHydrated] = useState(() => useStore.persist.hasHydrated());
@@ -35,6 +36,9 @@ function useHydrated() {
 
 export default function RootLayout() {
   const hydrated = useHydrated();
+  // The root subscription: it repaints the splash, the Stack's own background,
+  // the status bar, and the two overlays mounted below the navigator.
+  const scheme = useScheme();
   // Custom fonts are a progressive enhancement, not a gate: if this environment
   // can't fetch the font files (e.g. a single-file web preview with no asset
   // server behind it), the UI must still render and work in the fallback font
@@ -60,7 +64,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar style="dark" />
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.paper } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />

@@ -4,8 +4,9 @@ import Svg, { Circle, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as S
 
 import { palette, type } from '@/theme';
 
-const GRID = palette.line;
-const LABEL = palette.inkFaint;
+// Read per render, not once at import: these have to follow the active scheme.
+const GRID = () => palette.line;
+const LABEL = () => palette.inkFaint;
 const FONT = type.label.fontFamily;
 
 export interface BarDatum {
@@ -44,8 +45,8 @@ export function BarChart({
     <Svg width={width} height={height}>
       {Array.from({ length: maxTicks + 1 }, (_, i) => (niceMax / maxTicks) * i).map((t, i) => (
         <G key={i}>
-          <Line x1={padL} y1={y(t)} x2={width - 10} y2={y(t)} stroke={GRID} strokeWidth={1} />
-          <SvgText x={padL - 6} y={y(t) + 3.5} fontSize={9} fontFamily={FONT} fill={LABEL} textAnchor="end">{fmt(t)}</SvgText>
+          <Line x1={padL} y1={y(t)} x2={width - 10} y2={y(t)} stroke={GRID()} strokeWidth={1} />
+          <SvgText x={padL - 6} y={y(t) + 3.5} fontSize={9} fontFamily={FONT} fill={LABEL()} textAnchor="end">{fmt(t)}</SvgText>
         </G>
       ))}
       {data.map((d, i) => {
@@ -57,12 +58,12 @@ export function BarChart({
             {h2 > 0 && <Rect x={x} y={y(d.value + (d.value2 ?? 0))} width={barW} height={h2} rx={barW / 3} fill={color2 ?? palette.sage} />}
             {h1 > 0 && <Rect x={x} y={y(d.value)} width={barW} height={h1 + (h2 > 0 ? 4 : 0)} rx={barW / 3} fill={d.highlight ? palette.rose : color} />}
             {i % labelEvery === 0 && (
-              <SvgText x={x + barW / 2} y={height - 4} fontSize={9} fontFamily={FONT} fill={LABEL} textAnchor="middle">{d.label}</SvgText>
+              <SvgText x={x + barW / 2} y={height - 4} fontSize={9} fontFamily={FONT} fill={LABEL()} textAnchor="middle">{d.label}</SvgText>
             )}
           </G>
         );
       })}
-      {!!unit && <SvgText x={width - 10} y={11} fontSize={9} fontFamily={FONT} fill={LABEL} textAnchor="end">{unit}</SvgText>}
+      {!!unit && <SvgText x={width - 10} y={11} fontSize={9} fontFamily={FONT} fill={LABEL()} textAnchor="end">{unit}</SvgText>}
     </Svg>
   );
 }
@@ -112,8 +113,8 @@ export function LineChart({
       </Defs>
       {Array.from({ length: 5 }, (_, i) => minY + ((maxY - minY) / 4) * i).map((t, i) => (
         <G key={i}>
-          <Line x1={padL} y1={sy(t)} x2={width - 12} y2={sy(t)} stroke={GRID} strokeWidth={1} />
-          <SvgText x={padL - 6} y={sy(t) + 3.5} fontSize={9} fontFamily={FONT} fill={LABEL} textAnchor="end">{fmtY(t)}</SvgText>
+          <Line x1={padL} y1={sy(t)} x2={width - 12} y2={sy(t)} stroke={GRID()} strokeWidth={1} />
+          <SvgText x={padL - 6} y={sy(t) + 3.5} fontSize={9} fontFamily={FONT} fill={LABEL()} textAnchor="end">{fmtY(t)}</SvgText>
         </G>
       ))}
       {bandPath && <Path d={bandPath} fill={palette.sage} opacity={0.14} />}
@@ -125,7 +126,7 @@ export function LineChart({
         <Circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={i === points.length - 1 ? 4.5 : 2.6} fill={palette.card} stroke={color} strokeWidth={2.4} />
       ))}
       {[minX, (minX + maxX) / 2, maxX].map((t, i) => (
-        <SvgText key={i} x={sx(t)} y={height - 6} fontSize={9} fontFamily={FONT} fill={LABEL} textAnchor={i === 0 ? 'start' : i === 2 ? 'end' : 'middle'}>
+        <SvgText key={i} x={sx(t)} y={height - 6} fontSize={9} fontFamily={FONT} fill={LABEL()} textAnchor={i === 0 ? 'start' : i === 2 ? 'end' : 'middle'}>
           {fmtX(t)}
         </SvgText>
       ))}
@@ -153,12 +154,12 @@ export function SleepRaster({
     <Svg width={width} height={height}>
       {[0, 6, 12, 18, 24].map((h) => (
         <G key={h}>
-          <Line x1={x(h * 60)} y1={padT} x2={x(h * 60)} y2={padT + days * rowHeight} stroke={GRID} strokeWidth={1} />
-          <SvgText x={x(h * 60)} y={padT - 4} fontSize={8.5} fontFamily={FONT} fill={LABEL} textAnchor="middle">{h}</SvgText>
+          <Line x1={x(h * 60)} y1={padT} x2={x(h * 60)} y2={padT + days * rowHeight} stroke={GRID()} strokeWidth={1} />
+          <SvgText x={x(h * 60)} y={padT - 4} fontSize={8.5} fontFamily={FONT} fill={LABEL()} textAnchor="middle">{h}</SvgText>
         </G>
       ))}
       {Array.from({ length: days }, (_, i) => (
-        <SvgText key={i} x={padL - 5} y={padT + i * rowHeight + rowHeight - 2.5} fontSize={8} fontFamily={FONT} fill={LABEL} textAnchor="end">
+        <SvgText key={i} x={padL - 5} y={padT + i * rowHeight + rowHeight - 2.5} fontSize={8} fontFamily={FONT} fill={LABEL()} textAnchor="end">
           {labels[i] ?? ''}
         </SvgText>
       ))}
@@ -203,7 +204,7 @@ export function DayRhythm({
         <Circle key={i} cx={x(m.min)} cy={barY + barH + 8} r={3} fill={m.kind === 'feed' ? palette.gold : palette.sage} />
       ))}
       {[0, 6, 12, 18, 24].map((h) => (
-        <SvgText key={h} x={x(h * 60)} y={11} fontSize={8.5} fontFamily={FONT} fill={LABEL} textAnchor={h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}>
+        <SvgText key={h} x={x(h * 60)} y={11} fontSize={8.5} fontFamily={FONT} fill={LABEL()} textAnchor={h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}>
           {h}
         </SvgText>
       ))}

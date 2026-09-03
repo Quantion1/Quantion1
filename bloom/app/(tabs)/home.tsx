@@ -20,8 +20,11 @@ import {
 } from '@/state/hooks';
 import { useSettings, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 export default function HomeScreen() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const nest = useNest();
   const settings = useSettings();

@@ -7,12 +7,15 @@
  * and the primary action — so the eye always knows where the reward is.
  */
 
-export const palette = {
+/** Every colour the app can name. Both schemes carry the whole set. */
+const LIGHT = {
   // Ground
   paper: '#F5F1EA',
   paperDeep: '#EDE7DC',
   card: '#FFFDF8',
   cardSunk: '#F7F3EB',
+  /** A surface sitting on top of a card — the selected half of a segmented control. */
+  raised: '#FFFFFF',
 
   // Ink
   ink: '#2B2724',
@@ -50,7 +53,97 @@ export const palette = {
   danger: '#A6402F',
   dangerSoft: '#F7E2DD',
   white: '#FFFFFF',
-} as const;
+
+  /** Veils the thing behind it: a locked chart. */
+  scrim: 'rgba(245,241,234,0.72)',
+  /** Behind a modal, darkening the whole screen. */
+  backdrop: 'rgba(43,39,36,0.45)',
+};
+
+export type Palette = typeof LIGHT;
+
+/**
+ * Night parchment, not a grey app. The ground is a warm near-black with brown in
+ * it, ink is warm off-white, and every accent moves the opposite way from the
+ * light scheme: the base lightens so it can carry text, the soft tint darkens so
+ * it can carry a surface. Marigold is the one colour that barely moves — Dot
+ * looks the same at 3am as at noon.
+ */
+const DARK: Palette = {
+  // Ground
+  paper: '#17130F',
+  paperDeep: '#100D0A',
+  card: '#241F19',
+  cardSunk: '#1B1712',
+  // Light carries a raised surface on shadow alone; in the dark there is no
+  // shadow to see, so it has to be a step lighter than the card itself.
+  raised: '#332B22',
+
+  // Ink
+  ink: '#F3EDE3',
+  inkSoft: '#B5AA9C',
+  inkFaint: '#877D71',
+  line: '#342C24',
+  lineSoft: '#28221B',
+
+  // Dot's marigold
+  dot: '#E8B75E',
+  dotDeep: '#F1CA84',
+  dotSoft: '#3A2D16',
+  bill: '#E39A4B',
+  billDeep: '#EFB273',
+
+  // Accents
+  blue: '#8FAFD6',
+  blueSoft: '#1D2530',
+  sage: '#82C29E',
+  sageSoft: '#18251E',
+  clay: '#D09C6D',
+  claySoft: '#291F17',
+  rose: '#E0938C',
+  roseSoft: '#2C1D1B',
+  plum: '#B29EDB',
+  plumSoft: '#231D2E',
+  teal: '#73BEC5',
+  tealSoft: '#152524',
+  moss: '#A7BC7E',
+  mossSoft: '#1F2419',
+  gold: '#DCB26D',
+  goldSoft: '#292116',
+
+  // States
+  danger: '#E58474',
+  dangerSoft: '#301D1A',
+  scrim: 'rgba(23,19,15,0.78)',
+  backdrop: 'rgba(0,0,0,0.62)',
+  // Sits on an accent-coloured button, so it is really "the colour text takes on
+  // top of an accent" — on dark those accents are light, and need dark text.
+  white: '#17130F',
+};
+
+const SCHEMES = { light: LIGHT, dark: DARK };
+export type SchemeName = keyof typeof SCHEMES;
+
+let active: Palette = LIGHT;
+let activeName: SchemeName = 'light';
+
+/** Switch the whole app over. Components read `palette` live, so this is all it takes. */
+export function applyScheme(name: SchemeName) {
+  active = SCHEMES[name];
+  activeName = name;
+}
+
+export const isDark = () => activeName === 'dark';
+
+/**
+ * A live view of whichever scheme is active. Every key is a getter, so a style
+ * written as `{ color: palette.ink }` picks up the current scheme at the moment
+ * it renders — no component has to thread a theme object through its props.
+ */
+export const palette = {} as Palette;
+for (const key of Object.keys(LIGHT) as (keyof Palette)[]) {
+  Object.defineProperty(palette, key, { get: () => active[key], enumerable: true });
+}
 
 export type AccentName = 'blue' | 'sage' | 'clay' | 'rose' | 'plum' | 'teal' | 'moss' | 'gold' | 'dot';
 
@@ -72,19 +165,23 @@ export const space = (n: number) => n * 4;
  * lifted card, and a soft warm shadow — the feel of things resting on a desk.
  */
 export const shadow = {
-  rest: {
-    shadowColor: '#3A2E1E',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 1,
+  get rest() {
+    return {
+      shadowColor: isDark() ? '#000000' : '#3A2E1E',
+      shadowOpacity: isDark() ? 0.3 : 0.05,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 3 },
+      elevation: 1,
+    };
   },
-  lift: {
-    shadowColor: '#3A2E1E',
-    shadowOpacity: 0.13,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
+  get lift() {
+    return {
+      shadowColor: isDark() ? '#000000' : '#3A2E1E',
+      shadowOpacity: isDark() ? 0.5 : 0.13,
+      shadowRadius: 22,
+      shadowOffset: { width: 0, height: 10 },
+      elevation: 6,
+    };
   },
 };
 

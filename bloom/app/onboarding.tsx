@@ -14,10 +14,13 @@ import type { Stage } from '@/domain/types';
 import { addDays, fromDayKey, MONTHS } from '@/lib/date';
 import { useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 const STEPS = 4;
 
 export default function Onboarding() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const setProfile = useStore((s) => s.setProfile);
   const setTiles = useStore((s) => s.setTiles);

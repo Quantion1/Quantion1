@@ -13,10 +13,13 @@ import { DOT_STAGE_LABEL, ladder } from '@/domain/levels';
 import { useNest } from '@/state/hooks';
 import { usePremium, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 type Tab = 'levels' | 'cards' | 'badges';
 
 export default function JourneyScreen() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const nest = useNest();
   const progress = useStore((s) => s.progress);

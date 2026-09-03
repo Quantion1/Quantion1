@@ -12,8 +12,11 @@ import { addDays, fromDayKey, toDayKey, todayKey } from '@/lib/date';
 import { useNest } from '@/state/hooks';
 import { useProfile, useStore } from '@/state/store';
 import { palette, radius, type } from '@/theme';
+import { useScheme } from '@/theme/scheme';
 
 export default function Review() {
+  // Repaints this screen (and everything under it) when the theme changes.
+  useScheme();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const entries = useStore((s) => s.entries);

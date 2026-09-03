@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import React, { useRef } from 'react';
 import {
-  Animated, Platform, Pressable, PressableProps, StyleProp, StyleSheet,
+  Animated, Platform, Pressable, PressableProps, StyleProp,
   Text, TextInput, TextStyle, View, ViewStyle,
 } from 'react-native';
 
@@ -202,7 +202,7 @@ export function Segmented<T extends string>({
             onPress={() => { tap(); onChange(o.value); }}
             style={[
               { flex: 1, paddingVertical: 8, borderRadius: radius.pill, alignItems: 'center' },
-              active ? { backgroundColor: palette.card, ...shadow.rest } : null,
+              active ? { backgroundColor: palette.raised, ...shadow.rest } : null,
             ]}
           >
             <Text style={{ ...type.bodyMed, fontSize: 13, color: active ? palette.ink : palette.inkFaint }}>
@@ -329,7 +329,14 @@ export function Empty({ emoji, title, text }: { emoji: string; title: string; te
   );
 }
 
-export const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: palette.paper },
-  content: { padding: 16, gap: 14, paddingBottom: 130 },
-});
+/**
+ * The chrome every screen shares. Deliberately not a StyleSheet: that freezes its
+ * colours the moment this module is imported, and `screen` has to follow whichever
+ * scheme is active when it is read.
+ */
+export const styles = {
+  get screen(): ViewStyle {
+    return { flex: 1, backgroundColor: palette.paper };
+  },
+  content: { padding: 16, gap: 14, paddingBottom: 130 } as ViewStyle,
+};

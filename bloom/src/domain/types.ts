@@ -97,9 +97,13 @@ export interface Profile {
 
 export type UnitSystem = 'metric' | 'imperial';
 
+export type ThemePref = 'system' | 'light' | 'dark';
+
 export interface Settings {
   units: UnitSystem;
   clock24h: boolean;
+  /** 'system' follows the phone; the other two override it. */
+  theme: ThemePref;
   reviewHour: number;
   drinks: string[];
 }
