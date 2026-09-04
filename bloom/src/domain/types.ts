@@ -68,6 +68,11 @@ export interface Block {
   single?: boolean;
   bedwake?: boolean;
   ph?: string;
+  /**
+   * An alternative way to enter what an earlier block already covers. Shown
+   * folded away, because two live inputs for one value is clutter, not choice.
+   */
+  secondary?: boolean;
 }
 
 export interface Tracker {

@@ -11,12 +11,12 @@ export const TRACKERS: Tracker[] = [
   {
     key: 'sleep', label: 'Sleep', emoji: '😴', accent: 'blue', group: 'Baby', stage: 'baby', starter: true,
     blurb: 'Naps and nights',
-    blocks: [{ t: 'timer' }, { t: 'timepair', label: 'OR ENTER THE TIMES' }],
+    blocks: [{ t: 'timer' }, { t: 'timepair', label: 'OR ENTER THE TIMES', secondary: true }],
   },
   {
     key: 'breast', label: 'Breastfeed', emoji: '🤱', accent: 'rose', group: 'Baby', stage: 'baby', starter: true,
     blurb: 'Which side, how long',
-    blocks: [{ t: 'sides' }, { t: 'timepair', label: 'OR ENTER THE TIMES' }],
+    blocks: [{ t: 'sides' }, { t: 'timepair', label: 'OR ENTER THE TIMES', secondary: true }],
   },
   {
     key: 'bottle', label: 'Bottle', emoji: '🍼', accent: 'gold', group: 'Baby', stage: 'baby', starter: true,

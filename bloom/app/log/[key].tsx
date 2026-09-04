@@ -41,6 +41,7 @@ export default function LogSheet() {
   const [draft, setDraft] = useState<Draft>({});
   const [minutesAgo, setMinutesAgo] = useState(0);
   const [note, setNote] = useState('');
+  const [details, setDetails] = useState(false);
   const at = useMemo(() => new Date(Date.now() - minutesAgo * 60000).toISOString(), [minutesAgo]);
 
   const set = (patch: Draft) => setDraft((d) => ({ ...d, ...patch }));
@@ -67,7 +68,12 @@ export default function LogSheet() {
     router.back();
   };
 
-  const instant = t.blocks.length === 1 && (t.blocks[0].t === 'confirm' || t.blocks[0].instant);
+  // Blocks that already commit the entry themselves — a counter with its own
+  // save, a drink you tap, an event you stamp. Appending the standard
+  // when/note/save tail to these gave the sheet two save buttons and a second,
+  // emptier way to log the same thing.
+  const selfClosing = new Set(['confirm', 'counter', 'drinks', 'events', 'textlist']);
+  const instant = t.blocks.length === 1 && (selfClosing.has(t.blocks[0].t) || t.blocks[0].instant);
 
   return (
     <Sheet emoji={t.emoji} emojiTint={a.soft} title={t.label} subtitle={t.blurb}>
@@ -88,27 +94,41 @@ export default function LogSheet() {
       {!instant && (
         <>
           <Rule />
-          <Section title="When">
-            <Wrap>
-              {[0, 15, 30, 60, 120].map((m) => (
-                <Chip
-                  key={m}
-                  tone={t.accent}
-                  small
-                  label={m === 0 ? 'Now' : m < 60 ? `${m}m ago` : `${m / 60}h ago`}
-                  selected={minutesAgo === m}
-                  onPress={() => setMinutesAgo(m)}
-                />
-              ))}
-            </Wrap>
-            <Small>Saving as {formatTime(at, settings.clock24h)}</Small>
-          </Section>
 
-          <Section title="Note (optional)">
-            <Field value={note} onChangeText={setNote} placeholder="anything worth remembering" multiline />
-          </Section>
+          {/* Almost every entry is "now, no note". Asking for both every time
+              cost more height than the tracker itself, so they fold into one
+              line that states what will be saved and opens if it is wrong. */}
+          {details ? (
+            <>
+              <Section title="When">
+                <Wrap>
+                  {[0, 15, 30, 60, 120].map((m) => (
+                    <Chip
+                      key={m}
+                      tone={t.accent}
+                      small
+                      label={m === 0 ? 'Now' : m < 60 ? `${m}m ago` : `${m / 60}h ago`}
+                      selected={minutesAgo === m}
+                      onPress={() => setMinutesAgo(m)}
+                    />
+                  ))}
+                </Wrap>
+              </Section>
 
-          <Button title="Save" tone="ink" size="lg" full onPress={() => save()} />
+              <Section title="Note (optional)">
+                <Field value={note} onChangeText={setNote} placeholder="anything worth remembering" multiline />
+              </Section>
+            </>
+          ) : (
+            <Pressable onPress={() => { tap(); setDetails(true); }} hitSlop={8}>
+              <Small>
+                Saving as {formatTime(at, settings.clock24h)}
+                <Small style={{ color: a.base }}>  ·  change the time or add a note</Small>
+              </Small>
+            </Pressable>
+          )}
+
+          <Button title="Save" tone={t.accent} size="lg" full onPress={() => save()} />
         </>
       )}
     </Sheet>
@@ -129,6 +149,14 @@ function BlockView({
   entries: Entry[];
   trackerKey: string;
 }) {
+  // A fallback input stays folded until asked for: showing it beside the
+  // primary one implies both need answering, and doubles the sheet.
+  if (block.secondary) {
+    return <Folded label={block.label ?? 'OR ENTER IT BY HAND'} tone={tone}>{body()}</Folded>;
+  }
+  return body();
+
+  function body() {
   switch (block.t) {
     case 'timer':
       return <TimerBlock optional={block.optional} minutes={draft.minutes ?? 0} onChange={(m) => set({ minutes: m })} tone={tone} />;
@@ -286,7 +314,7 @@ function BlockView({
       );
 
     case 'counter':
-      return <Counter target={block.target ?? 10} count={draft.count ?? 0} minutes={draft.minutes ?? 0} set={set} onDone={onInstant} />;
+      return <Counter target={block.target ?? 10} count={draft.count ?? 0} tone={tone} set={set} onDone={onInstant} />;
 
     case 'confirm':
       return (
@@ -349,6 +377,24 @@ function BlockView({
     default:
       return null;
   }
+  }
+}
+
+/**
+ * A disclosure for an alternative input. Closed it costs one line; open it
+ * behaves exactly as it did when it was always on screen.
+ */
+function Folded({ label, tone, children }: { label: string; tone: any; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const a = accent(tone);
+  if (!open) {
+    return (
+      <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={8}>
+        <Small style={{ color: a.base }}>{label.toLowerCase()}</Small>
+      </Pressable>
+    );
+  }
+  return <>{children}</>;
 }
 
 /* ─────────────────────────────────────────────────────── block helpers */
@@ -362,8 +408,10 @@ function TimerBlock({
   optional?: boolean;
 }) {
   const [running, setRunning] = useState(false);
+  const [typing, setTyping] = useState(false);
   const startRef = useRef(0);
   const [, force] = useState(0);
+  const a = accent(tone);
 
   useEffect(() => {
     if (!running) return;
@@ -375,25 +423,41 @@ function TimerBlock({
 
   return (
     <View style={{ gap: 12 }}>
-      <Label>{optional ? 'TIME IT (OPTIONAL)' : 'TIME IT, OR TYPE IT'}</Label>
-      <Pressable
-        onPress={() => {
-          tap();
-          if (running) { onChange(Math.max(1, Math.round(elapsed))); setRunning(false); }
-          else { startRef.current = Date.now(); setRunning(true); }
-        }}
-        style={{
-          alignItems: 'center', paddingVertical: 22, borderRadius: radius.lg,
-          backgroundColor: running ? accent(tone).soft : palette.cardSunk,
-          borderWidth: 1.5, borderColor: running ? accent(tone).base : palette.line,
-        }}
-      >
-        <Text style={{ ...type.numeral, color: palette.ink }}>
-          {running ? formatDuration(elapsed) : formatDuration(minutes)}
-        </Text>
-        <Small>{running ? 'TAP TO STOP' : 'TAP TO START'}</Small>
-      </Pressable>
-      <Stepper value={minutes} unit="minutes" step={5} min={0} max={900} onChange={onChange} />
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <Label>{optional ? 'TIME IT (OPTIONAL)' : 'TIME IT'}</Label>
+        {/* Two entry methods stacked on top of each other doubled the height of
+            every timed tracker. The timer is the one people came for; typing a
+            number is the fallback, so it waits until it is asked for. */}
+        {!running && (
+          <Pressable onPress={() => { tap(); setTyping((v) => !v); }} hitSlop={8}>
+            <Small style={{ color: a.base }}>{typing ? 'use the timer' : 'type it instead'}</Small>
+          </Pressable>
+        )}
+      </View>
+
+      {typing && !running ? (
+        <Stepper value={minutes} unit="minutes" step={5} min={0} max={900} onChange={onChange} />
+      ) : (
+        <Pressable
+          onPress={() => {
+            tap();
+            if (running) { onChange(Math.max(1, Math.round(elapsed))); setRunning(false); }
+            else { startRef.current = Date.now(); setRunning(true); }
+          }}
+          style={{
+            alignItems: 'center', paddingVertical: 22, borderRadius: radius.lg,
+            backgroundColor: running ? a.soft : palette.cardSunk,
+            borderWidth: 1.5, borderColor: running ? a.base : palette.line,
+          }}
+        >
+          <Text style={{ ...type.numeral, color: running ? a.base : palette.ink }}>
+            {running ? formatDuration(elapsed) : formatDuration(minutes)}
+          </Text>
+          <Small style={{ color: running ? a.base : palette.inkFaint }}>
+            {running ? 'TAP TO STOP' : 'TAP TO START'}
+          </Small>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -445,17 +509,24 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
   );
 }
 
+/**
+ * One target to hit, one thing to tap. Everything a kick count needs is the
+ * number and how long it took, so the circle carries both and the guidance is
+ * a single line under it — a paragraph of reassurance is not what anyone is
+ * reading at the twelfth kick.
+ */
 function Counter({
-  target, count, minutes, set, onDone,
+  target, count, tone, set, onDone,
 }: {
   target: number;
   count: number;
-  minutes: number;
+  tone: any;
   set: (p: Draft) => void;
   onDone: (extra: Draft) => void;
 }) {
   const startRef = useRef<number | null>(null);
   const [, force] = useState(0);
+  const a = accent(tone);
 
   useEffect(() => {
     if (startRef.current == null) return;
@@ -467,10 +538,7 @@ function Counter({
   const done = count >= target;
 
   return (
-    <View style={{ alignItems: 'center', gap: 16 }}>
-      <Body style={{ textAlign: 'center' }}>
-        Ten movements is the usual guide. What matters is that it stays like yours — tell your midwife if it changes.
-      </Body>
+    <View style={{ alignItems: 'center', gap: 14 }}>
       <Pressable
         onPress={() => {
           tap();
@@ -478,20 +546,25 @@ function Counter({
           set({ count: Math.min(target, count + 1), minutes: Math.max(1, Math.round(elapsed)) });
         }}
         style={{
-          width: 210, height: 210, borderRadius: 105,
-          backgroundColor: done ? palette.sageSoft : palette.dotSoft,
-          borderWidth: 2, borderColor: done ? palette.sage : palette.dot,
-          alignItems: 'center', justifyContent: 'center',
+          width: 208, height: 208, borderRadius: 104,
+          backgroundColor: done ? palette.sageSoft : a.soft,
+          borderWidth: 2, borderColor: done ? palette.sage : count ? a.base : palette.line,
+          alignItems: 'center', justifyContent: 'center', gap: 2,
           ...shadow.rest,
         }}
       >
-        <Text style={{ ...type.hero, fontSize: 60, color: palette.ink }}>{count}</Text>
-        <Small>of {target}</Small>
-        <Small>{startRef.current ? formatDuration(elapsed) : 'tap to start'}</Small>
+        <Text style={{ ...type.hero, fontSize: 64, color: done ? palette.sage : a.base }}>{count}</Text>
+        {/* The elapsed time only appears once it means something. */}
+        <Small style={{ color: a.base }}>
+          {startRef.current ? `${formatDuration(elapsed)} · tap for every kick` : 'tap for every kick'}
+        </Small>
       </Pressable>
+
+      <Small style={{ textAlign: 'center' }}>Ten kicks within two hours is the usual check.</Small>
+
       <Button
-        title={done ? 'Save the session' : `Save ${count}`}
-        tone="ink"
+        title="Save kick counter"
+        tone={tone}
         size="lg"
         full
         disabled={count === 0}

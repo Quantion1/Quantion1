@@ -170,15 +170,18 @@ export function Chip({
         paddingHorizontal: small ? 11 : 14,
         borderRadius: radius.pill,
         borderWidth: 1.5,
+        // A chosen chip fills with its colour rather than tinting: at a glance
+        // across a row of eight, a filled one is unmistakable and a faint one
+        // is not.
         borderColor: selected ? a.base : palette.line,
-        backgroundColor: selected ? a.soft : palette.card,
+        backgroundColor: selected ? a.base : palette.card,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
       }}
     >
       {icon ?? (!!emoji && <Text style={{ fontSize: small ? 13 : 15 }}>{emoji}</Text>)}
-      <Text style={{ ...type.bodyMed, fontSize: small ? 12.5 : 14, color: selected ? a.base : palette.inkSoft }}>
+      <Text style={{ ...type.bodyMed, fontSize: small ? 12.5 : 14, color: selected ? palette.white : palette.inkSoft }}>
         {label}
       </Text>
     </Pressable>
