@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import Animated, { SlideInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Dot } from '@/components/Dot';
 import {
@@ -69,10 +70,44 @@ export default function LogSheet() {
 
   const instant = t.blocks.length === 1 && (t.blocks[0].t === 'confirm' || t.blocks[0].instant);
 
+  // The sheet hugs its content, so a one-tap tracker is a short panel and a
+  // long form is a tall one. The cap keeps even the longest form from
+  // swallowing the screen — past it the body scrolls and the home screen
+  // stays visible above.
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const maxBodyHeight = height * 0.62;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.paper }} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: palette.line }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, justifyContent: 'flex-end' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      {/* Tapping what you can still see behind the sheet closes it, which is
+          what the dimming is promising. */}
+      <Pressable
+        style={[StyleSheet.absoluteFill, { backgroundColor: palette.backdrop }]}
+        onPress={() => { tap(); router.back(); }}
+      />
+
+      <Animated.View
+        entering={SlideInDown.duration(260)}
+        style={[
+          {
+            backgroundColor: palette.paper,
+            borderTopLeftRadius: radius.xl,
+            borderTopRightRadius: radius.xl,
+            paddingBottom: Math.max(insets.bottom, 10),
+            overflow: 'hidden',
+          },
+          shadow.lift,
+        ]}
+      >
+        <View style={{ alignItems: 'center', paddingTop: 8 }}>
+          <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.line }} />
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: palette.line }}>
           <View style={{ width: 40, height: 40, borderRadius: radius.md, backgroundColor: a.soft, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontSize: 20 }}>{t.emoji}</Text>
           </View>
@@ -85,7 +120,11 @@ export default function LogSheet() {
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: 18, gap: 22, paddingBottom: 44 }} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={{ maxHeight: maxBodyHeight }}
+          contentContainerStyle={{ padding: 18, gap: 22, paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+        >
           {t.blocks.map((b, i) => (
             <BlockView
               key={i}
@@ -127,8 +166,8 @@ export default function LogSheet() {
             </>
           )}
         </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </Animated.View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -68,7 +68,18 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.paper } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
-          <Stack.Screen name="log/[key]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          {/* A sheet, not a page: it sits over the home screen and takes only
+              the height its own content needs, so what you were looking at
+              stays visible behind it. The screen itself is transparent and
+              fades in; the panel does its own slide (see log/[key]). */}
+          <Stack.Screen
+            name="log/[key]"
+            options={{
+              presentation: 'transparentModal',
+              animation: 'fade',
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
           <Stack.Screen name="library" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="review" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
