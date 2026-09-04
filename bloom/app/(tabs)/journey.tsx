@@ -45,6 +45,7 @@ interface UpcomingRow {
 }
 
 function formatWhen(dateKey: string, time?: string): string {
+  if (!dateKey) return 'No date yet';
   const d = fromDayKey(dateKey);
   const rel =
     dateKey === todayKey() ? 'Today'
@@ -78,6 +79,7 @@ export default function JourneyScreen() {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
+  const [skipDate, setSkipDate] = useState(false);
   const [kind, setKind] = useState<PlanItem['kind']>('appointment');
   useCardSync();
 
@@ -122,16 +124,18 @@ export default function JourneyScreen() {
       const date = state === 'due' ? todayKey() : estimateFor(item);
       rows.push({ key: `care:${item.key}`, title: item.label, date, emoji: item.emoji, subtitle: item.what, careItem: item });
     }
-    return rows.sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '99:99').localeCompare(b.time ?? '99:99'));
+    // Undated reminders ("skip for now") sort after everything with a real date.
+    return rows.sort((a, b) => (a.date || '￿').localeCompare(b.date || '￿') || (a.time ?? '99:99').localeCompare(b.time ?? '99:99'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plans, care, carePhase, carePos, profile.dueDate, profile.birthDate]);
 
   const [hero, ...rest] = upcoming;
   const peek = 2;
 
-  const resetForm = () => { setTitle(''); setDate(''); setTime(''); setKind('appointment'); };
+  const resetForm = () => { setTitle(''); setDate(''); setTime(''); setSkipDate(false); setKind('appointment'); };
 
   const exportRow = (row: UpcomingRow) => {
+    if (!row.date) return;
     tap();
     exportToCalendar({
       uid: row.planId ?? `care-${row.careItem?.key}`,
@@ -307,7 +311,9 @@ export default function JourneyScreen() {
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                   {hero.planId ? (
                     <>
-                      <Button title="📆 Calendar" tone="quiet" size="sm" style={{ flex: 1 }} onPress={() => exportRow(hero)} />
+                      {!!hero.date && (
+                        <Button title="📆 Calendar" tone="quiet" size="sm" style={{ flex: 1 }} onPress={() => exportRow(hero)} />
+                      )}
                       <Button title="Done" tone="ink" size="sm" style={{ flex: 1 }} onPress={() => { tap(); updatePlan(hero.planId!, { done: true }); }} />
                     </>
                   ) : (
@@ -360,17 +366,31 @@ export default function JourneyScreen() {
                   </Wrap>
                 </View>
                 <View style={{ marginTop: 12 }}>
-                  <Label>When</Label>
-                  <View style={{ marginTop: 6 }}>
-                    <MiniCalendarGrid value={date} onChange={setDate} />
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                    <Label>When</Label>
+                    <Pressable
+                      onPress={() => { tap(); setSkipDate((v) => !v); if (!skipDate) { setDate(''); setTime(''); } }}
+                      hitSlop={8}
+                    >
+                      <Small style={{ color: palette.inkFaint }}>{skipDate ? 'Set a date instead' : "Skip — don't know yet"}</Small>
+                    </Pressable>
                   </View>
+                  {skipDate ? (
+                    <Small style={{ marginTop: 8 }}>No date yet — this will just sit at the end of the list until you set one.</Small>
+                  ) : (
+                    <View style={{ marginTop: 6 }}>
+                      <MiniCalendarGrid value={date} onChange={setDate} />
+                    </View>
+                  )}
                 </View>
-                <View style={{ marginTop: 12 }}>
-                  <Label>Time, optional</Label>
-                  <View style={{ marginTop: 6 }}>
-                    <TimeInput value={time} onChange={setTime} />
+                {!skipDate && (
+                  <View style={{ marginTop: 12 }}>
+                    <Label>Time, optional</Label>
+                    <View style={{ marginTop: 6 }}>
+                      <TimeInput value={time} onChange={setTime} />
+                    </View>
                   </View>
-                </View>
+                )}
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
                   <Button title="Cancel" tone="quiet" size="sm" style={{ flex: 1 }} onPress={() => { setAdding(false); resetForm(); }} />
                   <Button
@@ -378,9 +398,9 @@ export default function JourneyScreen() {
                     tone="ink"
                     size="sm"
                     style={{ flex: 1 }}
-                    disabled={!title.trim() || !date}
+                    disabled={!title.trim()}
                     onPress={() => {
-                      addPlan({ title: title.trim(), date, time: time || undefined, kind });
+                      addPlan({ title: title.trim(), date, time: date ? (time || undefined) : undefined, kind });
                       resetForm();
                       setAdding(false);
                     }}

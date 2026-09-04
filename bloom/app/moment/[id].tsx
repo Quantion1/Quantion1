@@ -85,6 +85,14 @@ export default function MomentScreen() {
     setPhase('done');
   };
 
+  /** Skips the date entirely — captured (or left) as undated, fillable later. */
+  const skip = () => {
+    tap();
+    if (revisit) redate(moment.id, '');
+    else capture(moment.id, '');
+    setPhase('done');
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
       {phase === 'done' && celebrated && <Confetti />}
@@ -127,6 +135,7 @@ export default function MomentScreen() {
             </Card>
 
             <Button title={revisit ? 'Save the date' : 'Capture it'} tone="dot" full disabled={!whole} onPress={save} />
+            <Button title="Skip — don't know yet" tone="quiet" full onPress={skip} />
             {revisit && <Button title="Back" tone="quiet" full onPress={() => setPhase('done')} />}
           </>
         ) : (
