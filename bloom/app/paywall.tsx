@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, Text, View } from 'react-native';
 
 import { Dot } from '@/components/Dot';
+import { Sheet } from '@/components/Sheet';
 import { Body, Button, Card, Heading, Label, Small, Title, ping, tap } from '@/components/ui';
 import { usePremium, useStore } from '@/state/store';
 import { palette, radius, shadow, type } from '@/theme';
@@ -42,14 +42,9 @@ export default function Paywall() {
   const [plan, setPlan] = useState<Plan>('annual');
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.paper }} edges={['bottom']}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-        <View style={{ backgroundColor: palette.dotSoft, paddingTop: 52, paddingBottom: 26, paddingHorizontal: 24, alignItems: 'center', gap: 8 }}>
-          <Pressable onPress={() => { tap(); router.back(); }} style={{ position: 'absolute', top: 16, right: 20 }} hitSlop={14}>
-            <Text style={{ fontSize: 20, color: palette.inkSoft }}>✕</Text>
-          </Pressable>
-          <Dot stage="sit" size={120} />
-          <Title style={{ fontSize: 26 }}>Nest, in full</Title>
+    <Sheet emoji="✨" title="Nest, in full" subtitle="Everything logging turns into" maxBodyFraction={0.72} padded={false}>
+        <View style={{ backgroundColor: palette.dotSoft, paddingTop: 24, paddingBottom: 26, paddingHorizontal: 24, alignItems: 'center', gap: 8 }}>
+          <Dot stage="sit" size={110} />
           <Body style={{ textAlign: 'center', maxWidth: 300 }}>
             You already do the hard part at three in the morning. Premium is what turns all that logging into answers.
           </Body>
@@ -150,7 +145,6 @@ export default function Paywall() {
             </Body>
           </Card>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+    </Sheet>
   );
 }

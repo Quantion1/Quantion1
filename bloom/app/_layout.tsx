@@ -14,6 +14,17 @@ import { useStore } from '@/state/store';
 import { palette } from '@/theme';
 import { useScheme } from '@/theme/scheme';
 
+/**
+ * Every screen that presents itself as a bottom sheet. It has to be a
+ * transparent modal or the navigator paints an opaque page behind the panel
+ * and there is nothing left to see through — which is the whole point.
+ */
+const sheet = {
+  presentation: 'transparentModal',
+  animation: 'fade',
+  contentStyle: { backgroundColor: 'transparent' },
+} as const;
+
 function useHydrated() {
   const [hydrated, setHydrated] = useState(() => useStore.persist.hasHydrated());
   useEffect(() => {
@@ -68,25 +79,18 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.paper } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
-          {/* A sheet, not a page: it sits over the home screen and takes only
-              the height its own content needs, so what you were looking at
-              stays visible behind it. The screen itself is transparent and
-              fades in; the panel does its own slide (see log/[key]). */}
-          <Stack.Screen
-            name="log/[key]"
-            options={{
-              presentation: 'transparentModal',
-              animation: 'fade',
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-          <Stack.Screen name="library" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="review" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          {/* Sheets, not pages: each sits over the screen that opened it and
+              takes only the height its own content needs, so you keep your
+              place. The screen itself is transparent and fades in; the panel
+              does its own slide and drag-to-dismiss (see components/Sheet). */}
+          <Stack.Screen name="log/[key]" options={sheet} />
+          <Stack.Screen name="library" options={sheet} />
+          <Stack.Screen name="paywall" options={sheet} />
+          <Stack.Screen name="review" options={sheet} />
           <Stack.Screen name="hatch" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="moment/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="card/[week]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="settings" options={sheet} />
           <Stack.Screen name="history" options={{ animation: 'slide_from_right' }} />
         </Stack>
         <Toast />

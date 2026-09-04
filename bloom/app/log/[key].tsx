@@ -1,12 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Animated, { SlideInDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, Text, View } from 'react-native';
 
 import { Dot } from '@/components/Dot';
+import { Sheet } from '@/components/Sheet';
 import {
-  Body, Button, Chip, Field, Heading, Label, Rule, Section, Small, Stepper, Title, Wrap, ping, tap,
+  Body, Button, Chip, Field, Heading, Label, Rule, Section, Small, Stepper, Wrap, ping, tap,
 } from '@/components/ui';
 import { DRINKS } from '@/domain/drinks';
 import { tracker } from '@/domain/trackers';
@@ -70,104 +69,49 @@ export default function LogSheet() {
 
   const instant = t.blocks.length === 1 && (t.blocks[0].t === 'confirm' || t.blocks[0].instant);
 
-  // The sheet hugs its content, so a one-tap tracker is a short panel and a
-  // long form is a tall one. The cap keeps even the longest form from
-  // swallowing the screen — past it the body scrolls and the home screen
-  // stays visible above.
-  const { height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const maxBodyHeight = height * 0.62;
-
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, justifyContent: 'flex-end' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      {/* Tapping what you can still see behind the sheet closes it, which is
-          what the dimming is promising. */}
-      <Pressable
-        style={[StyleSheet.absoluteFill, { backgroundColor: palette.backdrop }]}
-        onPress={() => { tap(); router.back(); }}
-      />
+    <Sheet emoji={t.emoji} emojiTint={a.soft} title={t.label} subtitle={t.blurb}>
+      {t.blocks.map((b, i) => (
+        <BlockView
+          key={i}
+          block={b}
+          tone={t.accent}
+          draft={draft}
+          set={set}
+          settings={settings}
+          onInstant={(extra) => save(extra)}
+          entries={entries}
+          trackerKey={t.key}
+        />
+      ))}
 
-      <Animated.View
-        entering={SlideInDown.duration(260)}
-        style={[
-          {
-            backgroundColor: palette.paper,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            paddingBottom: Math.max(insets.bottom, 10),
-            overflow: 'hidden',
-          },
-          shadow.lift,
-        ]}
-      >
-        <View style={{ alignItems: 'center', paddingTop: 8 }}>
-          <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.line }} />
-        </View>
+      {!instant && (
+        <>
+          <Rule />
+          <Section title="When">
+            <Wrap>
+              {[0, 15, 30, 60, 120].map((m) => (
+                <Chip
+                  key={m}
+                  tone={t.accent}
+                  small
+                  label={m === 0 ? 'Now' : m < 60 ? `${m}m ago` : `${m / 60}h ago`}
+                  selected={minutesAgo === m}
+                  onPress={() => setMinutesAgo(m)}
+                />
+              ))}
+            </Wrap>
+            <Small>Saving as {formatTime(at, settings.clock24h)}</Small>
+          </Section>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: palette.line }}>
-          <View style={{ width: 40, height: 40, borderRadius: radius.md, backgroundColor: a.soft, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 20 }}>{t.emoji}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Title style={{ fontSize: 19 }}>{t.label}</Title>
-            <Small>{t.blurb}</Small>
-          </View>
-          <Pressable onPress={() => { tap(); router.back(); }} hitSlop={14}>
-            <Text style={{ fontSize: 20, color: palette.inkFaint }}>✕</Text>
-          </Pressable>
-        </View>
+          <Section title="Note (optional)">
+            <Field value={note} onChangeText={setNote} placeholder="anything worth remembering" multiline />
+          </Section>
 
-        <ScrollView
-          style={{ maxHeight: maxBodyHeight }}
-          contentContainerStyle={{ padding: 18, gap: 22, paddingBottom: 24 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {t.blocks.map((b, i) => (
-            <BlockView
-              key={i}
-              block={b}
-              tone={t.accent}
-              draft={draft}
-              set={set}
-              settings={settings}
-              onInstant={(extra) => save(extra)}
-              entries={entries}
-              trackerKey={t.key}
-            />
-          ))}
-
-          {!instant && (
-            <>
-              <Rule />
-              <Section title="When">
-                <Wrap>
-                  {[0, 15, 30, 60, 120].map((m) => (
-                    <Chip
-                      key={m}
-                      tone={t.accent}
-                      small
-                      label={m === 0 ? 'Now' : m < 60 ? `${m}m ago` : `${m / 60}h ago`}
-                      selected={minutesAgo === m}
-                      onPress={() => setMinutesAgo(m)}
-                    />
-                  ))}
-                </Wrap>
-                <Small>Saving as {formatTime(at, settings.clock24h)}</Small>
-              </Section>
-
-              <Section title="Note (optional)">
-                <Field value={note} onChangeText={setNote} placeholder="anything worth remembering" multiline />
-              </Section>
-
-              <Button title="Save" tone="ink" size="lg" full onPress={() => save()} />
-            </>
-          )}
-        </ScrollView>
-      </Animated.View>
-    </KeyboardAvoidingView>
+          <Button title="Save" tone="ink" size="lg" full onPress={() => save()} />
+        </>
+      )}
+    </Sheet>
   );
 }
 

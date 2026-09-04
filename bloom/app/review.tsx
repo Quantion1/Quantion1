@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 
 import { DayRhythm } from '@/charts';
 import { Dot } from '@/components/Dot';
-import { Body, Button, Card, Empty, Heading, Label, Small, Title, tap } from '@/components/ui';
+import { Sheet } from '@/components/Sheet';
+import { Body, Button, Card, Empty, Heading, Label, Small, tap } from '@/components/ui';
 import { buildReview } from '@/analytics';
 import { EntryLine } from '@/components/EntryLine';
 import { addDays, fromDayKey, toDayKey, todayKey } from '@/lib/date';
@@ -34,21 +34,24 @@ export default function Review() {
   const isToday = day === todayKey();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.paper }} edges={['top', 'bottom']}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 18 }}>
+    <Sheet
+      title={isToday ? 'Today' : fromDayKey(day).toLocaleDateString(undefined, { weekday: 'long' })}
+      subtitle={fromDayKey(day).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}
+      centerTitle
+      maxBodyFraction={0.72}
+      padded={false}
+      left={
         <Pressable onPress={() => { tap(); shift(-1); }} hitSlop={12}>
           <Text style={{ fontSize: 18, color: palette.inkSoft }}>‹</Text>
         </Pressable>
-        <View style={{ alignItems: 'center' }}>
-          <Title style={{ fontSize: 19 }}>{isToday ? 'Today' : fromDayKey(day).toLocaleDateString(undefined, { weekday: 'long' })}</Title>
-          <Small>{fromDayKey(day).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}</Small>
-        </View>
+      }
+      right={
         <Pressable onPress={() => { tap(); if (!isToday) shift(1); }} hitSlop={12}>
           <Text style={{ fontSize: 18, color: isToday ? palette.line : palette.inkSoft }}>›</Text>
         </Pressable>
-      </View>
-
-      <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 0, gap: 14, paddingBottom: 40 }}>
+      }
+    >
+      <View style={{ padding: 18, gap: 14 }}>
         {!review.hasData ? (
           <Card>
             <Empty
@@ -138,8 +141,8 @@ export default function Review() {
         )}
 
         <Button title="Close" tone="quiet" full onPress={() => router.back()} />
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </Sheet>
   );
 }
 

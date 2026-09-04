@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, Switch, Text, View } from 'react-native';
 
 import { confirmAlert } from '@/components/Confirm';
 import { DateInput } from '@/components/DateInput';
-import { Body, Button, Card, Chip, Field, Heading, Label, Rule, Segmented, Small, Title, Wrap, tap } from '@/components/ui';
+import { Sheet } from '@/components/Sheet';
+import { Body, Button, Card, Chip, Field, Heading, Label, Rule, Segmented, Small, Wrap, tap } from '@/components/ui';
 import { CARE_SYSTEMS, COUNTRY_ORDER } from '@/domain/care';
 import { DRINKS } from '@/domain/drinks';
 import type { ThemePref, UnitSystem } from '@/domain/types';
@@ -32,15 +32,8 @@ export default function Settings() {
   const [birth, setBirth] = useState(profile.birthDate ?? '');
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.paper }} edges={['top', 'bottom']}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18 }}>
-        <Pressable onPress={() => { tap(); router.back(); }} hitSlop={14}>
-          <Text style={{ fontSize: 20, color: palette.inkSoft }}>‹</Text>
-        </Pressable>
-        <Title style={{ fontSize: 21 }}>Settings</Title>
-      </View>
-
-      <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 0, gap: 16, paddingBottom: 44 }}>
+    <Sheet emoji="⚙️" title="Settings" maxBodyFraction={0.72} padded={false}>
+      <View style={{ padding: 18, gap: 16 }}>
         <Card>
           <Heading>Appearance</Heading>
           <Small style={{ marginTop: 2, marginBottom: 10 }}>
@@ -188,7 +181,7 @@ export default function Settings() {
             {nest.stage} · {nest.captured} moments · {progress.badges.length} badges · {progress.cards.length} cards
           </Small>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </Sheet>
   );
 }
